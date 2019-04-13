@@ -17,10 +17,10 @@ public class DigestCalculator {
 	    /* Obtém os argumentos */
 	    String tipo_digest = args[0];
 	    String caminho_listaDigest = args[1];
-	    String [] caminho_arquivos = new String[args.length-2];
+	    Arquivo [] arquivos = new Arquivo[args.length-2];
 
 	    for(int i=0; i<args.length-2; i++)
-	    	caminho_arquivos[i] = args[i+2];
+	    	arquivos[i] = new Arquivo(args[i+2]);
 
 	    System.out.println(tipo_digest);
 	    System.out.println(caminho_listaDigest);
@@ -29,10 +29,10 @@ public class DigestCalculator {
 
 		/* Percorrer os arquivos (da linha de comando) */
 		/* Para cada arquivo de i=0 ate N: */
-		for(int i=0; i<caminho_arquivos.length; i++){
+		for(int i=0; i<arquivos.length; i++){
 			
 			/* Abre o arquivo pelo caminho */
-			Scanner input = new Scanner(new File(caminho_arquivos[i]));
+			Scanner input = new Scanner(new File(arquivos[i].path));
 			
 			while(input.hasNextLine()) {
 				System.out.println(input.next());
@@ -170,23 +170,3 @@ public class DigestCalculator {
 
 	}
 }
-
-/*
-public class Arquivo {
-
-	public String nome;
-	public byte[] digest_bytes;
-	public String digest_hex;
-	public String status;
-	public boolean FILE_FOUND;
-
-	public Arquivo(String path){
-
-		this.status = null;
-		this.FILE_FOUND = false;
-
-	}
-
-
-}
-*/
