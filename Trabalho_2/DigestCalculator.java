@@ -23,7 +23,6 @@ public class DigestCalculator {
 	    	caminho_arquivos[i] = args[i+2];
 
 	    System.out.println(tipo_digest);
-	    System.out.println(caminho_listaDigest);
 
 	    //MessageDigest md = MessageDigest.getInstance(tipo_digest);
 
@@ -59,6 +58,12 @@ public class DigestCalculator {
 									/* Marca o status dos dois arquivos como COLLISION */
 
 
+		//abrindo arquivo de lista de digests para leitura
+		Scanner lista = new Scanner(new File(caminho_listaDigest));
+			
+		while(lista.hasNextLine()){
+			System.out.println(lista.next());
+		}
 
 
 		/* Verifica se arquivo está na lista de Digests */
