@@ -19,33 +19,42 @@ public class DigestCalculator {
 	    String caminho_listaDigest = args[1];
 	    Arquivo [] arquivos = new Arquivo[args.length-2];
 
+	    byte[] bytes = new byte[8092];
+	    MessageDigest md = null;
+
+	    try{
+	    	md = MessageDigest.getInstance(tipo_digest);   
+	    }
+	    catch (NoSuchAlgorithmException e) {
+			System.out.println("Nao e possivel utilizar o algoritmo especificado.");
+			System.exit(1);
+		}
+
 	    for(int i=0; i<args.length-2; i++)
 	    	arquivos[i] = new Arquivo(args[i+2]);
 
-	    System.out.println(tipo_digest);
-
-	    //MessageDigest md = MessageDigest.getInstance(tipo_digest);
 
 		/* Percorrer os arquivos (da linha de comando) */
 		/* Para cada arquivo de i=0 ate N: */
 		for(int i=0; i<arquivos.length; i++){
 			
 			/* Abre o arquivo pelo caminho */
-			Scanner input = new Scanner(new File(arquivos[i].path));
-			
-			while(input.hasNextLine()) {
-				System.out.println(input.next());
-				
-				//String line = input.NextLine();
-				//md.update(line)
-			}	
+			InputStream in = new FileInputStream(arquivos[i].path);
 
-			/* Calcular Digest do conteudo do arquivo */
-    			/* FALTA DETALHAR - > LEITURA EM BLOCOS !!!! */
-    			/* Guardar em variavel na classe dos arquivos */
+   			/* Calcular Digest do conteudo do arquivo */
+   			/* Guardar em variavel na classe dos arquivos */
+    		for (int n; (n = in.read(bytes)) != -1;) 
+      			md.update(bytes, 0, n);
+    	
+			arquivos[i].digest_bytes = md.digest();
 
+			for(byte b:arquivos[i].digest_bytes){
+        		System.out.printf("%02x",b);
+        	}
+
+			in.close();
 		}
-		
+
 
 	    /* Verificar colisao com outros arquivos passados na linha de comando */
 
@@ -59,11 +68,7 @@ public class DigestCalculator {
 
 
 		//abrindo arquivo de lista de digests para leitura
-		Scanner lista = new Scanner(new File(caminho_listaDigest));
-			
-		while(lista.hasNextLine()){
-			System.out.println(lista.next());
-		}
+		InputStream lista = new FileInputStream(caminho_listaDigest);
 
 
 		/* Verifica se arquivo está na lista de Digests */
