@@ -5,6 +5,7 @@ public class Arquivo {
 	public byte[] digest_bytes;
 	public String digest_hex;
 	public String status;
+	public boolean arquivo_existe;
 
 	public Arquivo(String path){
 
