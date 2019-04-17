@@ -5,12 +5,13 @@ public class Arquivo {
 	public byte[] digest_bytes;
 	public String digest_hex;
 	public String status;
-	public boolean arquivo_existe;
+	public boolean arquivo_existe_na_lista;
 
 	public Arquivo(String path){
 
 		this.path = path;
-		this.status = null;
+		this.status = "";
+		this.arquivo_existe_na_lista = false;
 		this.nome = path.substring(path.lastIndexOf("/")+1);
 
 	}

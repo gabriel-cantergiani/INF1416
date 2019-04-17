@@ -2,6 +2,9 @@ import java.security.*;
 import javax.crypto.*;
 import java.util.Scanner;
 import java.io.*;
+import java.util.List;
+import java.util.ArrayList;
+
 
 public class DigestCalculator {
 
@@ -14,153 +17,145 @@ public class DigestCalculator {
 	      System.exit(1);
 	    }
 
-	    /* Obtém os argumentos */
+	    /* Obtém os argumentos e declara/inicializa variaveis */
 	    String tipo_digest = args[0];
-	    String caminho_listaDigest = args[1];
-	    Arquivo [] arquivos = new Arquivo[args.length-2];
+	    List<Arquivo> arquivos = new ArrayList<Arquivo>();
+	    File lista_digest = new File(args[1]);
+	    Scanner lista;
 
 	    byte[] bytes = new byte[8092];
 	    MessageDigest md = null;
 
+	    /* Inicializa lista de arquivos */
 	    for(int i=0; i<args.length-2; i++)
-	    	arquivos[i] = new Arquivo(args[i+2]);
+	    	arquivos.add(new Arquivo(args[i+2]));
 
+	    /* Inicializa MessageDigest */
 	    try{
 	    	md = MessageDigest.getInstance(tipo_digest);   
 	    }
 	    catch (NoSuchAlgorithmException e) {
-			System.out.println("Nao e possivel utilizar o algoritmo especificado.");
+			System.err.println("Nao e possivel utilizar o algoritmo especificado.");
+			System.err.println("Tipos de digest suportados: 'MD5' ou 'SHA1'");
+			System.err.println("Modo de uso: java DigestCalculator <Tipo_Digest> <Caminho_ArqListDigest> <Caminho_Arq1> [...<Caminho_ArqN>]");
 			System.exit(1);
 		}
 
-		/* Percorrer os arquivos (da linha de comando) */
-		/* Para cada arquivo de i=0 ate N: */
-		for(int i=0; i<arquivos.length; i++){
-			
-			/* Abre o arquivo pelo caminho */
-			InputStream in = new FileInputStream(arquivos[i].path);
 
-   			/* Calcular Digest do conteudo do arquivo */
+	    /*--------------------- Percorrendo arquivos para calcular Digest e verificar colisao com outros arquivos passados na linha de comando -----------*/
+
+		for(int i=0; i<arquivos.size(); i++){
+
+
+			/* Abre o arquivo pelo caminho */
+			InputStream in = new FileInputStream(arquivos.get(i).path);
+
+   			/* Calcular Digest do conteudo do arquivo - LENDO DE 8092 EM 8092 BYTES */
     		for (int n; (n = in.read(bytes)) != -1;) 
       			md.update(bytes, 0, n);
 
    			/* Guardar em variavel na classe dos arquivos */
-			arquivos[i].digest_bytes = md.digest();
+			arquivos.get(i).digest_bytes = md.digest();
 
 			StringBuilder sb = new StringBuilder();
-			for(byte b:arquivos[i].digest_bytes){
+			for(byte b:arquivos.get(i).digest_bytes){
         		sb.append(String.format("%02X", b));	
         	}
-        	arquivos[i].digest_hex = sb.toString();
+        	arquivos.get(i).digest_hex = sb.toString();
 
-        	System.out.println(arquivos[i].digest_hex);
+        	System.out.println(arquivos.get(i).digest_hex);
 
 			md.reset();
 			in.close();
-		}
 
-	    /* Verificar colisao com outros arquivos passados na linha de comando */
 
-	    //COLISION = Status do arquivo cujo digest calculado colide com o digest de outro arquivo de nome diferente encontrado no arquivo ArqListaDigest ou com o digest de um dos arquivos fornecidos na linha de comando.
+			/* Verificando se já existe arquivo igual ou arquivo com o mesmo digest */
+			for(int j=0; j<i; j++){
 
-	    /* Para cada arquivo de i=0 ate N: */
-				/* Para cada arquivo de j=i ate N: */
-		for(int i=0; i<arquivos.length; i++){
-			for(int j=i+1; j<arquivos.length; j++){
+				/* verifica se existe já existe um arquivo igual (mesmo path) passado na linha de comando. Se existir, remove esta segunda instância */
+				if (arquivos.get(i).path.equals(arquivos.get(j).path)) {
+					arquivos.remove(i);
+					i--;
+					break;
+				}
 
-				/* Comparar digest do arquivo i com digest do arquivo j */
-				/* Se digests forem iguais :*/
-					/* Marca o status dos dois arquivos como COLLISION */
-				if((arquivos[i].digest_hex).equals(arquivos[j].digest_hex)){
-					arquivos[i].status = "COLLISION";
-					arquivos[j].status = "COLLISION";
+				/* Comparando digest do arquivo i com digest do arquivo j */
+				if((arquivos.get(i).digest_hex).equals(arquivos.get(j).digest_hex)){
+					arquivos.get(i).status = "COLLISION";
+					arquivos.get(j).status = "COLLISION";
+					/*  Digests iguais --> COLLISION */
+					//COLISION = Status do arquivo cujo digest calculado colide com o digest de outro arquivo de nome diferente encontrado no arquivo ArqListaDigest ou com o digest de um dos arquivos fornecidos na linha de comando.
 				}				
 			}
 
-			System.out.println(arquivos[i].status);
 		}
 	
+		/*------------------------------------------ Percorrendo lista de Digests -------------------------------------------------*/
 
-		/* Verifica se arquivo está na lista de Digests */
-		//abrindo arquivo de lista de digests para leitura
-		Scanner lista = new Scanner(new File(caminho_listaDigest));
 
-	    /* Para cada 1 dos N arquivos: */
-	    for(int i=0; i<arquivos.length;i++){
+		/* Procurando arquivo por arquivo... */
+	    for(int i=0; i<arquivos.size();i++){
 
-	    	/* Percorrer lista de Digests verificando o nome do arquivo e todos os digests presentes */
-	    	/* variaveis: mesmo_arquivo=false, FILE_FOUND=false*/
+	    	//abrindo arquivo de lista de digests para leitura
+	    	lista = new Scanner(lista_digest);
 
+	    	if (arquivos.get(i).status.equals("COLLISION"))
+	    		continue;
+	    		/* Se arquivo já estiver marcado com colisão, não é preciso buscá-lo na lista pois seu status já está definido */
+
+	    	/* Percorrendo linha por linha do arquivo... */
 	    	while(lista.hasNextLine()){
-	    	/* Para cada linha percorrida: */
+
+	    		boolean mesmo_arquivo = false;
 
 			   	/* Se arquivo buscado for o mesmo da linha atual: */
-			   	if(lista.findInLine(arquivos[i].nome) != null){
-			   		/* Setar variavel "mesmo_arquivo" como true */
-			   		/* Setar variavel FILE_FOUND=true */
+			   	if(lista.findInLine(arquivos.get(i).nome) != null){
 
-			   		System.out.println("mesmo arquivo");
+			   		mesmo_arquivo = true;
+			   		arquivos.get(i).arquivo_existe_na_lista = true;
+
 			   	}
-			   	/* Se o arquivo da linha atual for outro: */
-			   	else{
-			   		/* Setar variavel "mesmo_arquivo" como false */
-		    		System.out.println("nao eh o mesmo arquivo");
-		    	}			
 
-	    		/* Verificar se nesta linha existe o mesmo tipo de digest pro arquivo em questão (MD5 ou SHA-1) */
+	    		/* Verifica se nesta linha existe o mesmo tipo de digest buscado (MD5 ou SHA-1) */
 		   		if(lista.findInLine(tipo_digest) != null){
 	    		/* Se existir: */
-					/* Comparar digest calculado com o digest guardado nesta linha */
-					if(lista.findInLine(arquivos[i].digest_hex) != null){
-					/* Se o digest for igual e a variavel "mesmo_arquivo" é true: */
-						/* Este é o arquivo buscado  -> Colocar status OK */
 
-						//if(mesmo_arquivo == true)
-						//OK = Status do arquivo cujo digest calculado é igual ao digest fornecido no arquivo ArqListaDigest e não colide com o digest de outro arquivo na linha de comando.
-							arquivos[i].status = "OK";
+					/* Comparar digest calculado com o digest guardado nesta linha */
+					if(lista.findInLine(arquivos.get(i).digest_hex) != null){
+						
+						if(mesmo_arquivo)
+							arquivos.get(i).status = "OK";
+							/* Este é o arquivo buscado  -> Colocar status OK */
+							//OK = Status do arquivo cujo digest calculado é igual ao digest fornecido no arquivo ArqListaDigest e não colide com o digest de outro arquivo na linha de comando.
+						else
+							arquivos.get(i).status = "COLLISION";
+							/* Outro arquivo tem o mesmo digest -> COLLISION */
 					}			
 					else{
-					/* Senão: */
-						/* Se a variavel "mesmo_arquivo" é true: */
+	
+						if(mesmo_arquivo)
+							arquivos.get(i).status = "NOT OK";
 							/* Digest é errado -> Colocar status NOT OK */
-
-						//if(mesmo_arquivo == true)
 							//NOT OK = Status do arquivo cujo digest não é igual ao digest fornecido no arquivo ArqListaDigest e não colide com o digist de outro arquivo na linha de comando.
-							arquivos[i].status = "NOT OK";
-						//else
-						/* Senão: */
-							/* Outro arquivo tem o mesmo digest -> Colocar status COLLISION */
-							arquivos[i].status = "COLLISION";
+						
 					}
 				}
 
-				/* Se não existir: */
 				/* Pula para a proxima linha*/
-				
 				lista.nextLine();
 			}
 
 			/* DEPOIS DE PERCORRER TODAS AS LINHAS... */
 
+			/* Se o arquivo (ou digest) não tiver sido encontrado na lista  -> NOT FOUND */						
+			if (arquivos.get(i).status.equals(""))
+				arquivos.get(i).status = "NOT FOUND";
 
-			/* Se o status for igual a DEFAULT ou NULL */
-	
-					/* Coloca status como NOT FOUND */
+			lista.reset();
+		}
 
-					/* Se a variavel FILE_FOUND=false */
-
-						/* Arquivo não está na lista */
-						/* Seta variavel interna do arquivo FILE_FOUND=false */
-
-					/* Se a variavel FILE_FOUND=true */
-
-						/* Arquivo está na lista mas não possui o hash procurado */
-						/* Seta variavel interna do arquivo FILE_FOUND=true */
-					
-					/* Para simplificar os dois ifs acima basta fazer: Arquivo.FILE_FOUND = FILE_FOUND */
-
-
-
+		for(Arquivo arq: arquivos){
+			System.out.println(arq.nome+" - "+arq.status);
 		}
 
 		/* DEPOIS DE CONFIGURAR TODOS OS STATUS DOS ARQUIVOS */
