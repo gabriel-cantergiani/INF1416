@@ -4,6 +4,8 @@ import java.util.Scanner;
 import java.io.*;
 import java.util.List;
 import java.util.ArrayList;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 
 public class DigestCalculator {
@@ -63,7 +65,7 @@ public class DigestCalculator {
         	}
         	arquivos.get(i).digest_hex = sb.toString();
 
-        	System.out.println(arquivos.get(i).digest_hex);
+        	// System.out.println(arquivos.get(i).digest_hex);
 
 			md.reset();
 			in.close();
@@ -96,22 +98,23 @@ public class DigestCalculator {
 		/* Procurando arquivo por arquivo... */
 	    for(int i=0; i<arquivos.size();i++){
 
-	    	//abrindo arquivo de lista de digests para leitura
-	    	lista = new Scanner(lista_digest);
-
 	    	if (arquivos.get(i).status.equals("COLLISION"))
 	    		continue;
 	    		/* Se arquivo já estiver marcado com colisão, não é preciso buscá-lo na lista pois seu status já está definido */
 
+
+	    	//abrindo arquivo de lista de digests para leitura
+	    	lista = new Scanner(lista_digest);
+
 	    	/* Percorrendo linha por linha do arquivo... */
 	    	while(lista.hasNextLine()){
 
-	    		boolean mesmo_arquivo = false;
+	    		boolean linha_do_arquivo_buscado = false;
 
 			   	/* Se arquivo buscado for o mesmo da linha atual: */
 			   	if(lista.findInLine(arquivos.get(i).nome) != null){
 
-			   		mesmo_arquivo = true;
+			   		linha_do_arquivo_buscado = true;
 			   		arquivos.get(i).arquivo_existe_na_lista = true;
 
 			   	}
@@ -123,7 +126,7 @@ public class DigestCalculator {
 					/* Comparar digest calculado com o digest guardado nesta linha */
 					if(lista.findInLine(arquivos.get(i).digest_hex) != null){
 						
-						if(mesmo_arquivo)
+						if(linha_do_arquivo_buscado)
 							arquivos.get(i).status = "OK";
 							/* Este é o arquivo buscado  -> Colocar status OK */
 							//OK = Status do arquivo cujo digest calculado é igual ao digest fornecido no arquivo ArqListaDigest e não colide com o digest de outro arquivo na linha de comando.
@@ -133,7 +136,7 @@ public class DigestCalculator {
 					}			
 					else{
 	
-						if(mesmo_arquivo)
+						if(linha_do_arquivo_buscado)
 							arquivos.get(i).status = "NOT OK";
 							/* Digest é errado -> Colocar status NOT OK */
 							//NOT OK = Status do arquivo cujo digest não é igual ao digest fornecido no arquivo ArqListaDigest e não colide com o digist de outro arquivo na linha de comando.
@@ -142,7 +145,8 @@ public class DigestCalculator {
 				}
 
 				/* Pula para a proxima linha*/
-				lista.nextLine();
+				if (lista.hasNextLine())
+					lista.nextLine();
 			}
 
 			/* DEPOIS DE PERCORRER TODAS AS LINHAS... */
@@ -150,52 +154,59 @@ public class DigestCalculator {
 			/* Se o arquivo (ou digest) não tiver sido encontrado na lista  -> NOT FOUND */						
 			if (arquivos.get(i).status.equals(""))
 				arquivos.get(i).status = "NOT FOUND";
+			//NOT FOUND = Status do arquivo cujo digest não foi encontrado no arquivo ArqListaDigest e não colide com o digest de outro arquivo na linha de comando
 
-			lista.reset();
-		}
+			lista.close();
+		} 
 
-		for(Arquivo arq: arquivos){
-			System.out.println(arq.nome+" - "+arq.status);
-		}
 
-		/* DEPOIS DE CONFIGURAR TODOS OS STATUS DOS ARQUIVOS */
 
 		/* Percorrer novamente os arquivos para escreve-los na lista de Digest e printa-los na tela */
 
 		/* Para cada um dos N arquivos: */
+		for(int i=0; i<arquivos.size(); i++){
 
-			/* Se o status do arquivo for diferente de COLLISION: */
+			//abrindo arquivo de lista de digests para leitura
+		    lista = new Scanner(lista_digest);
 
-					/* Se o status do arquivo for NOT FOUND: */
+			// Escreve na lista arquivos não encontrados
+			if (arquivos.get(i).status.equals("NOT FOUND")) {
 
-							/* Se arquivo.FILE_FOUND=false */
+				/* Obtem string com o arquivo inteiro para alterá-lo e reescrevê-lo */
+				String arquivo_inteiro = new String(Files.readAllBytes( Paths.get(args[1]) ));
+  	
+  				/* Obtém índices relativos à linha do arquivo e à posição em que será escrito */
+				int indice_linha_arquivo = arquivo_inteiro.indexOf(arquivos.get(i).nome);
+				int indice_fim_linha = arquivo_inteiro.indexOf("\n", indice_linha_arquivo);
+				FileWriter writer = new FileWriter(lista_digest);
 
-									/* Vai para a ultima linha do arquivo e escreve no formato: */
+				/* Se arquivo não existe na lista */
+				if (indice_linha_arquivo == -1){
+					/* Escreve no final do arquivo */
+					writer.write(arquivo_inteiro+"\n"+arquivos.get(i).nome+" "+tipo_digest+" "+arquivos.get(i).digest_hex);
 
-									/*  <Nome_arquivo> <Tipo_Digest> <Digest_Hex> */
+				}
+				else{
 
+					/* Escreve na linha do arquivo e concatena com a parte anterior e posterior */
+					String string_antes = arquivo_inteiro.substring(0,indice_linha_arquivo-1);
+					String linha_do_arquivo = arquivo_inteiro.substring(indice_linha_arquivo, indice_fim_linha-1);
+					String string_depois = arquivo_inteiro.substring(indice_fim_linha);
 
-							/* Senão */
+					linha_do_arquivo += " "+tipo_digest+" "+arquivos.get(i).digest_hex;
+					writer.write(string_antes+linha_do_arquivo+string_depois);
 
-									/* Percorre lista de Digest procurando a linha do arquivo em questão */
+				}
 
-									/* Para cada linha do da lista de digests: */
-
-											/* Se a primeira palavra for igual ao nome do arquivo: */
-
-												/* Vai para o final da linha e escreve no formato: */
-
-												/* <Tipo_Digest> <Digest_Hex> */
-
-
-					/* Senão (status é OK ou NOT OK) - */
-
+				writer.close();
+			}
 		
-			/* Imprime na tela no seguinte formato: */
+			/* Imprime na tela: */
 
+			System.out.println(arquivos.get(i).nome+" "+tipo_digest+" "+arquivos.get(i).digest_hex+" "+arquivos.get(i).status);
 			/* <Nome_Arquivo> <Tipo_Digest> <Digest_Hex_Arquivo> <STATUS> */
 
-
+		}
 		/* FIM DO ALGORITMO */
 
 	}
