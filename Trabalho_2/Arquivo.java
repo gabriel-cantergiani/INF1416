@@ -10,7 +10,6 @@ public class Arquivo {
 
 		this.path = path;
 		this.status = "";
-		this.arquivo_existe_na_lista = false;
 		this.nome = path.substring(path.lastIndexOf("/")+1);
 
 	}

@@ -16,7 +16,7 @@ public class DigestCalculator {
 	private MessageDigest md;
 	
 
-	public static void main(String[] args) throws IOException{
+	public static void main(String[] args){
 
 		/* Verifica os argumentos recebimos pela linha de comando */
 	    if (args.length < 3) {
@@ -218,13 +218,18 @@ public class DigestCalculator {
 					}
 					else{
 
-						/* Escreve na linha do arquivo e concatena com a parte anterior e posterior */
-						String string_antes = arquivo_inteiro.substring(0,indice_ini_linha);
-						String linha_do_arquivo = arquivo_inteiro.substring(indice_ini_linha, indice_fim_linha-1);
-						String string_depois = arquivo_inteiro.substring(indice_fim_linha);
+						/* Se arquivo está na ultima linha, basta escrever direto */
+						if (indice_fim_linha == -1)
+							writer.write(arquivo_inteiro+" "+tipo_digest+" "+arquivos.get(i).digest_hex);
+						else{
+							/* Escreve digest na linha do arquivo e concatena com a parte anterior e posterior */
+							String string_antes = arquivo_inteiro.substring(0,indice_ini_linha);
+							String linha_do_arquivo = arquivo_inteiro.substring(indice_ini_linha, indice_fim_linha-1);
+							String string_depois = arquivo_inteiro.substring(indice_fim_linha);
 
-						linha_do_arquivo += " "+tipo_digest+" "+arquivos.get(i).digest_hex;
-						writer.write(string_antes+linha_do_arquivo+string_depois);
+							linha_do_arquivo += " "+tipo_digest+" "+arquivos.get(i).digest_hex;
+							writer.write(string_antes+linha_do_arquivo+string_depois);
+						}
 
 					}
 
