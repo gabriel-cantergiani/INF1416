@@ -141,11 +141,8 @@ public class DigestCalculator {
 		    		boolean linha_do_arquivo_buscado = false;
 
 				   	/* Se arquivo buscado for o mesmo da linha atual: */
-				   	if(lista.findInLine(arquivos.get(i).nome) != null){
-
+				   	if(lista.findInLine(arquivos.get(i).nome) != null)
 				   		linha_do_arquivo_buscado = true;
-				   		arquivos.get(i).arquivo_existe_na_lista = true;
-				   	}
 
 		    		/* Verifica se nesta linha existe o mesmo tipo de digest buscado (MD5 ou SHA1) */
 			   		if(lista.findInLine(tipo_digest) != null){
@@ -222,7 +219,7 @@ public class DigestCalculator {
 					else{
 
 						/* Escreve na linha do arquivo e concatena com a parte anterior e posterior */
-						String string_antes = arquivo_inteiro.substring(0,indice_ini_linha-1);
+						String string_antes = arquivo_inteiro.substring(0,indice_ini_linha);
 						String linha_do_arquivo = arquivo_inteiro.substring(indice_ini_linha, indice_fim_linha-1);
 						String string_depois = arquivo_inteiro.substring(indice_fim_linha);
 
