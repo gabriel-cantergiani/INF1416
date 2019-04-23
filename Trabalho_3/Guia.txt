@@ -1,0 +1,16 @@
+
+PREPARAÇÃO:
+
+-> Instancia e inicializa as classes necessárias.
+-> Faz conexão com o banco de dados.
+-> Chama classe que implementa a 1a etapa.
+
+1a ETAPA:
+
+-> Tela de identificação de email (inicialmente, linha de comando)
+
+-> Ao receber input, verifica se formato de email é válido e faz READ no banco de dados para ver se cadastro existe.
+
+-> Se não existir ou estiver bloqueado, dá mensagem de erro e volta ao estado inicial.
+
+-> Caso positivo, chamar classe que implementa a 2a etapa.
