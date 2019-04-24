@@ -14,3 +14,71 @@ PREPARAÇÃO:
 -> Se não existir ou estiver bloqueado, dá mensagem de erro e volta ao estado inicial.
 
 -> Caso positivo, chamar classe que implementa a 2a etapa.
+
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+
+1A PARTE
+----------------------------------------------------------------------------
+
+1a ETAPA:
+- verificação de email
+
+
+2a ETAPA:
+- teclado numero virtual, com botoes sobrecarregados (em pares) (igual de banco) (senha de 6 a 8 digitos)
+- criar algoritmo para testar todas as possibilidades entre estes pares de numeros
+- cada vez que usuario clica nos numeros, redistribui os numeros aleatoriamente
+- maximo de 3 tentativas! Se testar mais de 3, bloqueia conta (por 2 minutos) e volta para o inicio
+
+
+3a ETAPA:
+- validar se a pessoa tem a chave privada ligada a chave publica que esta no certificado
+- pedir pro usuario o arquivo da chave privada
+- chave privada deve estar criptografada com uma criptografia simétrica
+- usuario tbm deve fornecer a "frase secreta" com a qual é possivel gerar a chave simetrica que descriptografa a chave privada
+- classe SecureRandom (PNRG especificado no enunciado)
+- usar output do securerandom na clase KeyGenerator para gerar a chave, que vai produzir a chave simetrica correta para descriptografar e obter a chave privada
+- ...
+- chave privada continua guardada
+
+40%
+-----------------------------------------------------------------------------
+
+2a PARTE
+
+----------------------------------------------------------------------------
+
+4a ETAPA:
+- apresentar menu que depende do nivel de acesso do usuario (adm e usuario, adm pode fazer cadastro e usuario não)
+- usuario pode cadastrar certificado e senha
+- usuario pode alterar senha ou atualizar certificado
+- usuario deve confirmar dados antes de atualizar/cadastrar certificado
+- é pra guardar conteudo do certificado direto no banco, em bytes, base 64 !!
+
+
+5a ETAPA:
+- Sistema de arquivos criptografado
+- cada usuario tem um sistema de arquivos seguro
+- arquivo index guarda informaçoes sobre os arquivos naquele sistema
+- index tbm é criptografado
+- cada arquivo tem 3 arquivos associados: arq.enc, arq.env, arq.asd (conteudo criptografado, envelope digital, assinatura digital)
+- Usar chave privada do usuario no envelope para obter chave simetrica
+- usar chave simetrica no arquivo cifrado para obter arquivo original
+- usar chave publica do usuario na assinatura digital para obter digest original
+- calcular digest corrente do arquivo e comparar com digest original
+
+
+6a ETAPA:
+- usar tabela de eventos para registrar todos os erros/ocorrencias/eventos no uso do sistema
+- montar programa para listar logs registrados (em ordem)
+
+
+OBS:
+
+-> NAO GUARDAR SENHA EM TEXTO PLANO
+-> TEMPERAR SENHA COM SAL E CALCULAR DIGEST
+-> CRIAR SAL ALEATORIAMENTE (10 CARACTERES) (TEM QUE GUARDAR O SAL NO BANCO)
+-> LISTAR LOGS NA ORDEM CERTA!! (problema comum...)
+-> antes de fazer a interface, criar rotinas que fazem todas as operações
