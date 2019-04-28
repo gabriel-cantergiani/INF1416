@@ -28,9 +28,8 @@ public class conexaoBD {
 		
 		try {
 			/* Configura o driver */
-			String driver = "com.mysql.cj.jdbc.Driver";
-			Class.forName(driver);
-			this.conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/trab3?useTimezone=true&serverTimezone=UTC", "root", "senha123");
+			Class.forName("org.sqlite.JDBC");
+			this.conn = DriverManager.getConnection("jdbc:sqlite:C:\\Program Files\\sqlite\\trab3.db");
 			
 			if (this.conn == null)
 				System.out.println("Erro ao conectar com o banco de dados.");
