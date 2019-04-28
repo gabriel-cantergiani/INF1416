@@ -25,7 +25,6 @@ public class identificacaoUsuario{
 
 		/* FALTA:
 				- Criar interface para receber input do login_name.
-				- Pular para a proxima etapa de autenticacao.
 		*/
 		
 		/* Conex√£o com o banco de dados */
@@ -34,10 +33,11 @@ public class identificacaoUsuario{
 		/* Recebe input do usuario pelo console (temporario) */
 		Scanner scanner = new Scanner(System.in);
 		Boolean login_valido = false;
+		String login_name = null;
 
 		while (!login_valido) {
 			System.out.println("Digite o login_name:");
-			String login_name = scanner.nextLine();
+			login_name = scanner.nextLine();
 
 			//int index_email = login_name.indexOf("@");
 			if (!emailValido(login_name)){
@@ -53,16 +53,13 @@ public class identificacaoUsuario{
 				ResultSet result = stmt.executeQuery(query);
 
 				if (!result.next())
-					System.out.println("Usu·rio n„oo encontrado!");
+					System.out.println("Usu·rio n„o encontrado!");
 
 				else if (result.getInt("BLOQUEADO") == 1)
 					System.out.println("Este usu·rio est· temporariamente bloqueado!");
 
 				else{
-					System.out.println("Usu√°rio encontrado:");
-					System.out.println(result.getString("LOGIN_NAME"));
-					System.out.println(result.getString("NOME"));
-					System.out.println(result.getInt("GRUPO"));
+					System.out.println("Usu·rio encontrado!");
 					login_valido = true;
 				}
 
@@ -76,10 +73,9 @@ public class identificacaoUsuario{
 			}
 
 		}
-		
-		scanner.close();
 
 		/* PASSANDO PARA PROXIMA ETAPA DE AUTENTICACAO */
+		autenticacaoSenha.getInstance().iniciarAutenticacaoSenha(login_name);
 
 	}
 
