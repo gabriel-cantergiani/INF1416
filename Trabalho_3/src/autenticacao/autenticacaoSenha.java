@@ -1,6 +1,9 @@
 package autenticacao;
 
 import conexaoBD.conexaoBD;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.Scanner;
 import java.util.List;
@@ -67,12 +70,11 @@ public class autenticacaoSenha {
 		/* Passou de 3 tentativas -> Bloqueia a conta */
 
 		String query = "UPDATE TABLE USUARIOS SET BLOQUEADO=1 WHERE LOGIN_NAME='"+login_name+"';";
-		ResultSet resultUpdate;
 
 		try {
 			Connection conn = conexaoBD.getInstance().getConnection();
 			Statement stmt = conn.createStatement();
-			resultUpdate = stmt.executeQuery(query);
+			stmt.executeQuery(query);
 
 			if (stmt != null)
         		stmt.close();
@@ -165,7 +167,15 @@ public class autenticacaoSenha {
 
 		String senhaCorrente = "";
 		int[] indices = new int[5];
-		MessageDigest md =  MessageDigest.getInstance('SHA1');
+		MessageDigest md = null;
+
+		try{
+			md = MessageDigest.getInstance("SHA1");
+		}
+		catch (NoSuchAlgorithmException e){
+			System.err.println(e);
+			System.exit(1);
+		}
 
 		/* Testa todas as possiveis combinações de pares */
 		for(indices[0]=0; indices[0]<2; indices[0]++)
@@ -178,21 +188,29 @@ public class autenticacaoSenha {
 							for (int i=0; i<senha.size(); i++)
 								senhaCorrente += senha.get(i)[indices[i]];
 
-							String senhaTemperada = senhaCorrente + dadosUsuario.getString('SALT');
-							md.update(senhaTemperada);
-							byte [] senhaBytes = md.digest();
-							StringBuilder sb = new StringBuilder();
+							try{
+								String senhaTemperada = senhaCorrente + dadosUsuario.getString("SALT");
+								md.update(senhaTemperada.getBytes());
+								byte [] senhaBytes = md.digest();
+								StringBuilder sb = new StringBuilder();
 
-							for(byte b:senhaBytes){
-				        		sb.append(String.format("%02X", b));	
-				        	}
-				        	String valorCalculado = sb.toString();
+								for(byte b:senhaBytes){
+					        		sb.append(String.format("%02X", b));	
+					        	}
+					        	String valorCalculado = sb.toString();
 
-				        	/* Verifica se valorCalculado é igual a valorArmazenado da senha */
-				        	if (valorCalculado.equals(dadosUsuario.getString('SENHA')))
-				        		return true;
+					        	/* Verifica se valorCalculado é igual a valorArmazenado da senha */
+					        	if (valorCalculado.equals(dadosUsuario.getString("SENHA")))
+					        		return true;
 
-							md.reset();
+								md.reset();
+							}
+							catch (SQLException e) {
+								System.err.println(e);
+								System.out.println("Erro ao obter dados do usuário.");
+								System.exit(1);
+							}
+							
 						}
 
 

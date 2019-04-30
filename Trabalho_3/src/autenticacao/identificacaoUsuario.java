@@ -47,7 +47,7 @@ public class identificacaoUsuario{
 
 			/* Busca login no banco */
 			String query = "SELECT * FROM USUARIOS WHERE LOGIN_NAME='"+login_name+"';";
-			ResultSet result;
+			ResultSet result = null;
 
 			try {
 				Statement stmt = conn.createStatement();
