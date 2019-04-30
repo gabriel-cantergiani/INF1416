@@ -10,7 +10,7 @@ import java.util.Random;
 public class autenticacaoSenha {
 	
 	private static autenticacaoSenha authSenha = null;
-	private Random ran = null;;
+	private Random ran = null;
 
 	private autenticacaoSenha() {
 
@@ -23,7 +23,7 @@ public class autenticacaoSenha {
 		return authSenha;
 	}
 
-	protected void iniciarAutenticacaoSenha(String login_name) {
+	protected void iniciarAutenticacaoSenha(String login_name, ResultSet dadosUsuario) {
 
 		/* FALTA:
 				- Criar interface com teclado virtual para receber (pares de) digitos da senha.
@@ -36,8 +36,80 @@ public class autenticacaoSenha {
 
 		System.out.println("Iniciando autenticacao da senha pessoal. Usuário: "+login_name);
 
-		ran = new Random();
+		int tentativas = 0;
 
+		while (tentativas < 3){
+
+			/* Obtém senha através do teclado virtual numérico */
+			List<int[]> senha = geraTecladoVirtual();
+
+			System.out.println("Senha digitada:");
+			for(int i=0; i<senha.size(); i++){
+				System.out.print("[ ");
+				System.out.print(senha.get(i)[0]);
+				System.out.print(" ou ");
+				System.out.print(senha.get(i)[1]);
+				System.out.print("] ,  ");
+			}
+			System.out.println();
+
+			
+
+			if (verificaSenha(senha, dadosUsuario)){
+				/* PASSA PARA PROXIMA ETAPA */
+				tentativas = 0;
+			}
+			else
+				tentativas += 1;
+
+		}
+
+		/* Passou de 3 tentativas -> Bloqueia a conta */
+
+		String query = "UPDATE TABLE USUARIOS SET BLOQUEADO=1 WHERE LOGIN_NAME='"+login_name+"';";
+		ResultSet resultUpdate;
+
+		try {
+			Connection conn = conexaoBD.getInstance().getConnection();
+			Statement stmt = conn.createStatement();
+			resultUpdate = stmt.executeQuery(query);
+
+			if (stmt != null)
+        		stmt.close();
+		}
+		catch (SQLException e) {
+			System.err.println(e);
+			System.out.println("Erro ao atualizar usuário no banco de dados.");
+			System.exit(1);
+		}
+		
+		return;
+
+	}
+
+	private int[][] geraListaAleatoria(){
+
+		List<Integer> digitos = new ArrayList<Integer>();
+		int [][] lst = new int[5][2];
+		
+		for(int i=0; i<5; i++)
+			lst[i] = new int[2];
+
+		for(int i=0; i<10; i++)
+			digitos.add(i);
+
+		for(int i=0; i<5; i++){
+			lst[i][0] = digitos.remove(ran.nextInt(digitos.size()));
+			lst[i][1] = digitos.remove(ran.nextInt(digitos.size()));
+		}
+
+		return lst;
+
+	}
+
+	private List<int[]> geraTecladoVirtual(){
+
+		ran = new Random();
 		Scanner scanner = new Scanner(System.in);
 
 		/* Gera lista aletoria de pares para o teclado virtual */
@@ -67,7 +139,12 @@ public class autenticacaoSenha {
 			numBotaoClicado = scanner.nextInt();
 
 			if(numBotaoClicado == -1)
-				break;
+				if (senha.size() < 6){
+					System.out.println("A senha deve conter pelo menos 6 dígitos.");
+					continue;
+				}
+				else
+					break;
 
 			/* Adiciona par de digitos na senha */
 			senha.add(digitosTeclado[numBotaoClicado-1]);
@@ -79,38 +156,51 @@ public class autenticacaoSenha {
 			j+=1;
 		}
 
-
-		System.out.println("Senha digitada:");
-		for(int i=0; i<senha.size(); i++){
-			System.out.print("[ ");
-			System.out.print(senha.get(i)[0]);
-			System.out.print(" ou ");
-			System.out.print(senha.get(i)[1]);
-			System.out.print("] ,  ");
-		}
-		System.out.println();
-		
+		return senha;
 
 	}
 
-	private int[][] geraListaAleatoria(){
 
-		List<Integer> digitos = new ArrayList<Integer>();
-		int [][] lst = new int[5][2];
-		
-		for(int i=0; i<5; i++)
-			lst[i] = new int[2];
+	private boolean verificaSenha(List<int[]> senha, ResultSet dadosUsuario){
 
-		for(int i=0; i<10; i++)
-			digitos.add(i);
+		String senhaCorrente = "";
+		int[] indices = new int[5];
+		MessageDigest md =  MessageDigest.getInstance('SHA1');
 
-		for(int i=0; i<5; i++){
-			lst[i][0] = digitos.remove(ran.nextInt(digitos.size()));
-			lst[i][1] = digitos.remove(ran.nextInt(digitos.size()));
-		}
+		/* Testa todas as possiveis combinações de pares */
+		for(indices[0]=0; indices[0]<2; indices[0]++)
+			for(indices[1]=0; indices[1]<2; indices[1]++)
+				for(indices[2]=0; indices[2]<2; indices[2]++)
+					for(indices[3]=0; indices[3]<2; indices[3]++)
+						for(indices[4]=0; indices[4]<2; indices[4]++){
+							/* Para cada possível combinação dos pares: */
+							/* Monta string com senha corrente */							
+							for (int i=0; i<senha.size(); i++)
+								senhaCorrente += senha.get(i)[indices[i]];
 
-		return lst;
+							String senhaTemperada = senhaCorrente + dadosUsuario.getString('SALT');
+							md.update(senhaTemperada);
+							byte [] senhaBytes = md.digest();
+							StringBuilder sb = new StringBuilder();
 
+							for(byte b:senhaBytes){
+				        		sb.append(String.format("%02X", b));	
+				        	}
+				        	String valorCalculado = sb.toString();
+
+				        	/* Verifica se valorCalculado é igual a valorArmazenado da senha */
+				        	if (valorCalculado.equals(dadosUsuario.getString('SENHA')))
+				        		return true;
+
+							md.reset();
+						}
+
+
+		/* Não achou nenhuma combinação de digitos válida */
+		return false;
+			
 	}
+
+
 
 }

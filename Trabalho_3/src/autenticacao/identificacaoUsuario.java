@@ -35,7 +35,7 @@ public class identificacaoUsuario{
 		Boolean login_valido = false;
 		String login_name = null;
 
-		while (!login_valido) {
+		while (true) {
 			System.out.println("Digite o login_name:");
 			login_name = scanner.nextLine();
 
@@ -47,10 +47,11 @@ public class identificacaoUsuario{
 
 			/* Busca login no banco */
 			String query = "SELECT * FROM USUARIOS WHERE LOGIN_NAME='"+login_name+"';";
+			ResultSet result;
 
 			try {
 				Statement stmt = conn.createStatement();
-				ResultSet result = stmt.executeQuery(query);
+				result = stmt.executeQuery(query);
 
 				if (!result.next())
 					System.out.println("Usuário não encontrado!");
@@ -72,10 +73,11 @@ public class identificacaoUsuario{
 				System.exit(1);
 			}
 
-		}
+			/* PASSANDO PARA PROXIMA ETAPA DE AUTENTICACAO */
+			if(login_valido)
+				autenticacaoSenha.getInstance().iniciarAutenticacaoSenha(login_name, result);
 
-		/* PASSANDO PARA PROXIMA ETAPA DE AUTENTICACAO */
-		autenticacaoSenha.getInstance().iniciarAutenticacaoSenha(login_name);
+		}
 
 	}
 
