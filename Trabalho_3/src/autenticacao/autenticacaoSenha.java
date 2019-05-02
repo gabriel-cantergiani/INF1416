@@ -166,7 +166,7 @@ public class autenticacaoSenha {
 	private boolean verificaSenha(List<int[]> senha, ResultSet dadosUsuario){
 
 		String senhaCorrente = "";
-		int[] indices = new int[5];
+		int[] indices = new int[senha.size()];
 		MessageDigest md = null;
 
 		try{
@@ -183,11 +183,48 @@ public class autenticacaoSenha {
 				for(indices[2]=0; indices[2]<2; indices[2]++)
 					for(indices[3]=0; indices[3]<2; indices[3]++)
 						for(indices[4]=0; indices[4]<2; indices[4]++){
-							/* Para cada possível combinação dos pares: */
-							/* Monta string com senha corrente */							
-							for (int i=0; i<senha.size(); i++)
-								senhaCorrente += senha.get(i)[indices[i]];
-
+							for(indices[5]=0; indices[5]<2; indices[5]++){
+							// Para cada possivel combinacao dos pares: 
+							// Monta string com senha corrente[
+								
+								if(senha.size() == 7) {
+									for(indices[6]=0; indices[6]<2; indices[6]++)
+										for (int i=0; i<senha.size(); i++)
+											senhaCorrente += senha.get(i)[indices[i]];
+							
+										System.out.println(senhaCorrente);
+										senhaCorrente = "";
+								}
+								else if(senha.size() == 8) {
+									for(indices[7]=0; indices[7]<2; indices[7]++)
+										for(indices[6]=0; indices[6]<2; indices[6]++)
+											for (int i=0; i<senha.size(); i++)
+												senhaCorrente += senha.get(i)[indices[i]];
+								
+												System.out.println(senhaCorrente);
+												senhaCorrente = "";
+								}
+								else if(senha.size() == 9) {
+									for(indices[8]=0; indices[8]<2; indices[8]++)
+										for(indices[7]=0; indices[7]<2; indices[7]++)
+											for(indices[6]=0; indices[6]<2; indices[6]++)
+												for (int i=0; i<senha.size(); i++)
+													senhaCorrente += senha.get(i)[indices[i]];
+									
+												System.out.println(senhaCorrente);
+												senhaCorrente = "";
+								}
+								else {
+									/* Para cada possível combinação dos pares: */
+									/* Monta string com senha corrente */
+									for (int i=0; i<senha.size(); i++)
+										senhaCorrente += senha.get(i)[indices[i]];
+						
+									System.out.println(senhaCorrente);
+									senhaCorrente = "";
+								}
+														
+							/*
 							try{
 								String senhaTemperada = senhaCorrente + dadosUsuario.getString("SALT");
 								md.update(senhaTemperada.getBytes());
@@ -199,7 +236,7 @@ public class autenticacaoSenha {
 					        	}
 					        	String valorCalculado = sb.toString();
 
-					        	/* Verifica se valorCalculado é igual a valorArmazenado da senha */
+					        	// Verifica se valorCalculado é igual a valorArmazenado da senha 
 					        	if (valorCalculado.equals(dadosUsuario.getString("SENHA")))
 					        		return true;
 
@@ -210,6 +247,7 @@ public class autenticacaoSenha {
 								System.out.println("Erro ao obter dados do usuário.");
 								System.exit(1);
 							}
+							*/
 							
 						}
 
