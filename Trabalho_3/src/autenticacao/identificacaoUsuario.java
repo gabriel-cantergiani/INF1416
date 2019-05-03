@@ -32,7 +32,7 @@ public class identificacaoUsuario{
 
 		/* Recebe input do usuario pelo console (temporario) */
 		Scanner scanner = new Scanner(System.in);
-		Boolean login_valido = false;
+		//Boolean login_valido = false;
 		String login_name = null;
 
 		while (true) {
@@ -61,7 +61,8 @@ public class identificacaoUsuario{
 
 				else{
 					System.out.println("Usuário encontrado!");
-					login_valido = true;
+					/* PASSANDO PARA PROXIMA ETAPA DE AUTENTICACAO */
+					autenticacaoSenha.getInstance().iniciarAutenticacaoSenha(login_name, result);
 				}
 
 				if (stmt != null)
@@ -71,13 +72,9 @@ public class identificacaoUsuario{
 				System.err.println(e);
 				System.out.println("Erro ao buscar usuário no banco de dados.");
 				System.exit(1);
-			}
-
-			/* PASSANDO PARA PROXIMA ETAPA DE AUTENTICACAO */
-			if(login_valido)
-				autenticacaoSenha.getInstance().iniciarAutenticacaoSenha(login_name, result);
-
-		}
+			}			
+			
+		}//fim while
 
 	}
 

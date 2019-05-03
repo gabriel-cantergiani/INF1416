@@ -14,9 +14,19 @@ public class autenticacaoSenha {
 	
 	private static autenticacaoSenha authSenha = null;
 	private Random ran = null;
+	private MessageDigest md = null;
 
 	private autenticacaoSenha() {
+		
+		ran = new Random();
 
+		try{
+			md = MessageDigest.getInstance("SHA1");
+		}
+		catch (NoSuchAlgorithmException e){
+			System.err.println(e);
+			System.exit(1);
+		}
 	}
 
 	/* SINGLETON */
@@ -30,15 +40,13 @@ public class autenticacaoSenha {
 
 		/* FALTA:
 				- Criar interface com teclado virtual para receber (pares de) digitos da senha.
-				- Buscar SALT no banco de dados, juntar com as possiveis senha obtidas e gerar hash.
-				- Comparar hash gerado com o hash guardado no banco
-				- Testar os hashs de todas as possiveis combinações entre os pares de digitos.
 				- Bloquear usuário caso haja mais de 3 tentativas e voltar para a etapa anterior.
+				- � necessario criar um evento que ser� chamado em um tempo estipulado para desbloquear o usuario.
 				- Passar para proxima etapa caso senha esteja correta.
 		*/
 
 		System.out.println("Iniciando autenticacao da senha pessoal. Usuário: "+login_name);
-
+		
 		int tentativas = 0;
 
 		while (tentativas < 3){
@@ -56,16 +64,25 @@ public class autenticacaoSenha {
 			}
 			System.out.println();
 
-			
+			try{
+				if (verificaSenha(senha, dadosUsuario.getString("SENHA"), dadosUsuario.getString("SALT"))){
+					/* PASSA PARA PROXIMA ETAPA */
+					tentativas = 0;
+					System.out.println("Senha correta!");
+				}
+				else{
+					tentativas += 1;
+					System.out.println("Senha incorreta!");
+				}
 
-			if (verificaSenha(senha, dadosUsuario)){
-				/* PASSA PARA PROXIMA ETAPA */
-				tentativas = 0;
 			}
-			else
-				tentativas += 1;
+			catch (SQLException e) {
+				System.err.println(e);
+				System.out.println("Erro ao obter dados do usuário.");
+				System.exit(1);
+			}
 
-		}
+		}// fim while
 
 		/* Passou de 3 tentativas -> Bloqueia a conta */
 
@@ -74,7 +91,7 @@ public class autenticacaoSenha {
 		try {
 			Connection conn = conexaoBD.getInstance().getConnection();
 			Statement stmt = conn.createStatement();
-			stmt.executeQuery(query);
+			stmt.executeUpdate(query);
 
 			if (stmt != null)
         		stmt.close();
@@ -111,7 +128,6 @@ public class autenticacaoSenha {
 
 	private List<int[]> geraTecladoVirtual(){
 
-		ran = new Random();
 		Scanner scanner = new Scanner(System.in);
 
 		/* Gera lista aletoria de pares para o teclado virtual */
@@ -138,7 +154,9 @@ public class autenticacaoSenha {
 			System.out.println();
 
 			/* Captura digito referente ao numero do botao*/
-			numBotaoClicado = scanner.nextInt();
+			while((numBotaoClicado = scanner.nextInt()) != -1 && ( numBotaoClicado < 1 ||  numBotaoClicado > 5))
+				System.out.println("Número do botão inválido!");
+			
 
 			if(numBotaoClicado == -1)
 				if (senha.size() < 6){
@@ -163,99 +181,120 @@ public class autenticacaoSenha {
 	}
 
 
-	private boolean verificaSenha(List<int[]> senha, ResultSet dadosUsuario){
+	private boolean verificaSenha(List<int[]> senhaTestada, String senhaUsuario, String saltUsuario){
 
 		String senhaCorrente = "";
-		int[] indices = new int[senha.size()];
-		MessageDigest md = null;
-
-		try{
-			md = MessageDigest.getInstance("SHA1");
-		}
-		catch (NoSuchAlgorithmException e){
-			System.err.println(e);
-			System.exit(1);
-		}
+		int[] indices = new int[9];
 
 		/* Testa todas as possiveis combinações de pares */
 		for(indices[0]=0; indices[0]<2; indices[0]++)
 			for(indices[1]=0; indices[1]<2; indices[1]++)
 				for(indices[2]=0; indices[2]<2; indices[2]++)
 					for(indices[3]=0; indices[3]<2; indices[3]++)
-						for(indices[4]=0; indices[4]<2; indices[4]++){
-							for(indices[5]=0; indices[5]<2; indices[5]++){
-							// Para cada possivel combinacao dos pares: 
-							// Monta string com senha corrente[
-								
-								if(senha.size() == 7) {
-									for(indices[6]=0; indices[6]<2; indices[6]++)
-										for (int i=0; i<senha.size(); i++)
-											senhaCorrente += senha.get(i)[indices[i]];
-							
-										System.out.println(senhaCorrente);
-										senhaCorrente = "";
+						for(indices[4]=0; indices[4]<2; indices[4]++)
+							for(indices[5]=0; indices[5]<2; indices[5]++)
+								for(indices[6]=0; indices[6]<2; indices[6]++) {
+									for(indices[7]=0; indices[7]<2; indices[7]++) {
+										for(indices[8]=0; indices[8]<2; indices[8]++) {
+											for (int i=0; i<senhaTestada.size(); i++)				// Para cada possivel combinacao dos pares:
+												senhaCorrente += senhaTestada.get(i)[indices[i]];	// Monta string com senha corrente
+
+											// Chama funcao que obtem hash da senha+salt em string hex
+											System.out.println(senhaCorrente);
+											String valorCalculado = geraHashDaSenha(senhaCorrente, saltUsuario);
+											// Verifica se valorCalculado é igual a valorArmazenado da senha 
+								        	if (valorCalculado.equals(senhaUsuario))
+								        		return true;
+
+											senhaCorrente = "";
+											if (senhaTestada.size()<9)
+												break;
+										}
+										if (senhaTestada.size()<8)
+											break;
+									}
+									if (senhaTestada.size() < 7)
+										break;
 								}
-								else if(senha.size() == 8) {
-									for(indices[7]=0; indices[7]<2; indices[7]++)
-										for(indices[6]=0; indices[6]<2; indices[6]++)
-											for (int i=0; i<senha.size(); i++)
-												senhaCorrente += senha.get(i)[indices[i]];
-								
-												System.out.println(senhaCorrente);
-												senhaCorrente = "";
-								}
-								else if(senha.size() == 9) {
-									for(indices[8]=0; indices[8]<2; indices[8]++)
-										for(indices[7]=0; indices[7]<2; indices[7]++)
-											for(indices[6]=0; indices[6]<2; indices[6]++)
-												for (int i=0; i<senha.size(); i++)
-													senhaCorrente += senha.get(i)[indices[i]];
-									
-												System.out.println(senhaCorrente);
-												senhaCorrente = "";
-								}
-								else {
-									/* Para cada possível combinação dos pares: */
-									/* Monta string com senha corrente */
-									for (int i=0; i<senha.size(); i++)
-										senhaCorrente += senha.get(i)[indices[i]];
-						
-									System.out.println(senhaCorrente);
-									senhaCorrente = "";
-								}
-														
+
 							/*
-							try{
-								String senhaTemperada = senhaCorrente + dadosUsuario.getString("SALT");
-								md.update(senhaTemperada.getBytes());
-								byte [] senhaBytes = md.digest();
-								StringBuilder sb = new StringBuilder();
-
-								for(byte b:senhaBytes){
-					        		sb.append(String.format("%02X", b));	
-					        	}
-					        	String valorCalculado = sb.toString();
-
-					        	// Verifica se valorCalculado é igual a valorArmazenado da senha 
-					        	if (valorCalculado.equals(dadosUsuario.getString("SENHA")))
-					        		return true;
-
-								md.reset();
-							}
-							catch (SQLException e) {
-								System.err.println(e);
-								System.out.println("Erro ao obter dados do usuário.");
-								System.exit(1);
-							}
-							*/
 							
-						}
-
+							*/
 
 		/* Não achou nenhuma combinação de digitos válida */
 		return false;
 			
 	}
+
+
+	private String geraHashDaSenha(String senhaCorrente, String saltUsuario){
+
+		// junta senha com sal, e calcula hash
+		String senhaTemperada = senhaCorrente + saltUsuario;
+		md.update(senhaTemperada.getBytes());
+		byte [] hashBytes = md.digest();
+		StringBuilder sb = new StringBuilder();
+
+		// Transforma bytes em string de hexadecimal
+		for(byte b:hashBytes){
+    		sb.append(String.format("%02X", b));	
+    	}
+    	String valorCalculado = sb.toString();
+
+		md.reset();
+		// retorna valor calculado para hex(hash(senha+salt))
+		return valorCalculado;
+
+	}
+
+	private String geraSaltAleatorio(){
+
+		String salt = "";
+		String caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+		for (int i=0; i<10; i++)
+			salt += caracteres.charAt(ran.nextInt(caracteres.length()));
+
+		return salt;
+	}
+
+
+	private void criaUserTeste(){
+
+		String salt = geraSaltAleatorio();
+		String senha = "01234567";
+		String login_name = "teste@teste.com";
+		String nome = "Teste";
+		int grupo = 2;
+		byte certificado = 0x22;
+		int bloqueado = 0;
+
+		String senhaHash = geraHashDaSenha(senha, salt);
+
+		System.out.println(salt);
+		System.out.println(senhaHash);
+		System.out.println(senhaHash.length());
+
+		String insert = "INSERT INTO USUARIOS VALUES ('"+login_name+"','"+nome+"',"+grupo+",'"+salt+"','"+senhaHash+"',"+certificado+","+bloqueado+");";
+
+		try {
+			Connection conn = conexaoBD.getInstance().getConnection();
+			Statement stmt = conn.createStatement();
+			stmt.executeUpdate(insert);
+
+			if (stmt != null)
+        		stmt.close();
+		}
+		catch (SQLException e) {
+			System.err.println(e);
+			System.out.println("Erro ao atualizar usuário no banco de dados.");
+			System.exit(1);
+		}
+
+		System.out.println("Usuario criado com sucesso!");
+
+	}
+
 
 
 
