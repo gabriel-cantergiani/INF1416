@@ -29,17 +29,16 @@ public class identificacaoUsuario{
 		
 		/* Conex√£o com o banco de dados */
 		Connection conn = conexaoBD.getInstance().getConnection();
-
+		
 		/* Recebe input do usuario pelo console (temporario) */
 		Scanner scanner = new Scanner(System.in);
 		//Boolean login_valido = false;
 		String login_name = null;
 
 		while (true) {
-			System.out.println("Digite o login_name:");
+			System.out.print("Digite o login_name:");
 			login_name = scanner.nextLine();
 
-			//int index_email = login_name.indexOf("@");
 			if (!emailValido(login_name)){
 				System.out.println("O login_name deve ser em um formato de email valido!");
 				continue;
@@ -61,6 +60,10 @@ public class identificacaoUsuario{
 
 				else{
 					System.out.println("Usu·rio encontrado!");
+					/* Fecha statement para passar para 2 etapa */
+					stmt.close();
+					result.close();
+
 					/* PASSANDO PARA PROXIMA ETAPA DE AUTENTICACAO */
 					autenticacaoSenha.getInstance().iniciarAutenticacaoSenha(login_name, result);
 				}

@@ -7,10 +7,9 @@ import java.sql.*;
 public class conexaoBD {
 	
 	private static conexaoBD conexao = null;
-	private Connection conn;
+	private static Connection conn = null;
 
 	private conexaoBD(){
-		conn = null;
 	}
 
 	/* SINGLETON */
@@ -22,43 +21,44 @@ public class conexaoBD {
 	
 	public Connection getConnection() {
 		
-		/* Caso a conexão já exista, retorna direto */
-		if (this.conn != null)
-			return this.conn;
-		
 		try {
-			/* Configura o driver */
-			Class.forName("org.sqlite.JDBC");
-			this.conn = DriverManager.getConnection("jdbc:sqlite:C:\\Program Files\\sqlite\\trab3.db");
-			
-			if (this.conn == null)
-				System.out.println("Erro ao conectar com o banco de dados.");
-			
-			return this.conn;
+			if (conn == null || conn.isClosed()){
+				/* Configura o driver */
+				Class.forName("org.sqlite.JDBC");
+				//this.conn = DriverManager.getConnection("jdbc:sqlite:C:\\Program Files\\sqlite\\trab3.db");
+				conn = DriverManager.getConnection("jdbc:sqlite:C:\\Users\\Gabriel\\Google Drive\\Faculdade\\2019.1\\Segurança da Informação\\Trabalhos\\INF1416\\Trabalho_3\\trab3.db");
+				
+				if (conn == null)
+					System.out.println("Erro ao conectar com o banco de dados.");				
+			}
 		}
 		catch (ClassNotFoundException e) {
 			System.err.println(e);
-			System.out.println("Driver não encontrado.");
+			System.out.println("## ConexaoBD - Driver não encontrado. ##");
 			return null;
-        } 
+	    } 
 		catch (SQLException e) {
 			System.err.println(e);
-			System.out.println("Erro ao conectar com o banco de dados.");
+			System.out.println("## ConexaoBD - Erro ao conectar com o banco de dados. ##");
 			return null;
-        }
+	    }
+		
+		System.out.println("## ConexaoBD - Retornando conexao. ##");
+		return conn;
 			
 	}
 	
 	/* Fecha conexão */
 	public void close() {
 		try {
-			this.conn.close();
+			System.out.println("## ConexaoBD - fechando conexao existente. ##");
+			conn.close();
+			conn = null;
 		}
 		catch (SQLException e) {
-			System.err.println("Erro ao fechar conexão.");
+			System.err.println("## ConexaoBD - Erro ao fechar conexão. ## ");
 		}
 		
 	}
-
 
 }
