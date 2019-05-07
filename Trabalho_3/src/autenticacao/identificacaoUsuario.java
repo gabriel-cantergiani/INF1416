@@ -28,6 +28,9 @@ public class identificacaoUsuario{
 		*/
 		
 		/* Conexão com o banco de dados */
+		System.out.println("#### IDENTIFICACAO DO USUARIO - 1a ETAPA ####");
+		System.out.println("");
+		
 		Connection conn = conexaoBD.getInstance().getConnection();
 		
 		/* Recebe input do usuario pelo console (temporario) */
@@ -65,6 +68,9 @@ public class identificacaoUsuario{
 
 					/* PASSANDO PARA PROXIMA ETAPA DE AUTENTICACAO */
 					autenticacaoSenha.getInstance().iniciarAutenticacaoSenha(login_name);
+					System.out.println("");
+					System.out.println("#### IDENTIFICACAO DO USUARIO - 1a ETAPA ####");
+					System.out.println("");
 				}
 
 				if (stmt != null)

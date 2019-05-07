@@ -34,7 +34,6 @@ public class conexaoBD {
 		}
 		catch (ClassNotFoundException e) {
 			System.err.println(e);
-			System.out.println("## ConexaoBD - Driver não encontrado. ##");
 			return null;
 	    } 
 		catch (SQLException e) {
@@ -43,7 +42,6 @@ public class conexaoBD {
 			return null;
 	    }
 		
-		System.out.println("## ConexaoBD - Retornando conexao. ##");
 		return conn;
 			
 	}

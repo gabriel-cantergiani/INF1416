@@ -47,11 +47,11 @@ public class autenticacaoSenha {
 
 		/* FALTA:
 				- Criar interface com teclado virtual para receber (pares de) digitos da senha.
-				- Passar para proxima etapa caso senha esteja correta.
 		*/
-
-		
-		System.out.println("Iniciando autenticacao da senha pessoal. Usu?io: "+login_name);
+		System.out.println("");
+		System.out.println("#### AUTENTICACAO POR SENHA - 2a ETAPA ####");
+		System.out.println("");
+		System.out.println("Iniciando autenticacao da senha pessoal. Usuario: "+login_name);
 		String senhaUsuario = "";
 		String saltUsuario = "";
 		
@@ -61,7 +61,7 @@ public class autenticacaoSenha {
 			ResultSet dadosUsuario = stmt.executeQuery(query);
 
 			if (!dadosUsuario.next())
-				System.out.println("Usuário não encontrado!");
+				System.out.println("Usuario nao encontrado!");
 
 			senhaUsuario = dadosUsuario.getString("SENHA");
 			saltUsuario = dadosUsuario.getString("SALT");
@@ -71,7 +71,7 @@ public class autenticacaoSenha {
 		}
 		catch (SQLException e) {
 			System.err.println(e);
-			System.out.println("Erro ao buscar usuário no banco de dados.");
+			System.out.println("Erro ao buscar usuario no banco de dados.");
 			System.exit(1);
 		}			
 
@@ -96,6 +96,8 @@ public class autenticacaoSenha {
 				/* PASSA PARA PROXIMA ETAPA */
 				tentativas = 0;
 				System.out.println("Senha correta!");
+				autenticacaoChavePrivada.getInstance().iniciarAutenticacaoChavePrivada(login_name);
+				return;
 			}
 			else{
 				tentativas += 1;
