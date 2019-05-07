@@ -36,7 +36,7 @@ public class identificacaoUsuario{
 		String login_name = null;
 
 		while (true) {
-			System.out.print("Digite o login_name:");
+			System.out.print("Digite o login_name: ");
 			login_name = scanner.nextLine();
 
 			if (!emailValido(login_name)){
@@ -47,7 +47,6 @@ public class identificacaoUsuario{
 			/* Busca login no banco */
 			String query = "SELECT * FROM USUARIOS WHERE LOGIN_NAME='"+login_name+"';";
 			ResultSet result = null;
-
 			try {
 				Statement stmt = conn.createStatement();
 				result = stmt.executeQuery(query);
@@ -65,7 +64,7 @@ public class identificacaoUsuario{
 					result.close();
 
 					/* PASSANDO PARA PROXIMA ETAPA DE AUTENTICACAO */
-					autenticacaoSenha.getInstance().iniciarAutenticacaoSenha(login_name, result);
+					autenticacaoSenha.getInstance().iniciarAutenticacaoSenha(login_name);
 				}
 
 				if (stmt != null)

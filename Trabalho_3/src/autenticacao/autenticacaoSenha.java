@@ -15,6 +15,7 @@ import java.util.TimerTask;
 public class autenticacaoSenha {
 	
 	private static autenticacaoSenha authSenha = null;
+	private Connection conn;
 	private Random ran = null;
 	private MessageDigest md = null;
 	private Timer timer;
@@ -31,6 +32,8 @@ public class autenticacaoSenha {
 			System.err.println(e);
 			System.exit(1);
 		}
+
+		conn = conexaoBD.getInstance().getConnection();
 	}
 
 	/* SINGLETON */
@@ -40,22 +43,43 @@ public class autenticacaoSenha {
 		return authSenha;
 	}
 
-	protected void iniciarAutenticacaoSenha(String login_name, ResultSet dadosUsuario) {
+	protected void iniciarAutenticacaoSenha(String login_name) {
 
 		/* FALTA:
 				- Criar interface com teclado virtual para receber (pares de) digitos da senha.
-				- Bloquear usuário caso haja mais de 3 tentativas e voltar para a etapa anterior.
-				- É necessario criar um evento que será chamado em um tempo estipulado para desbloquear o usuario.
 				- Passar para proxima etapa caso senha esteja correta.
 		*/
 
-		System.out.println("Iniciando autenticacao da senha pessoal. Usuário: "+login_name);
 		
+		System.out.println("Iniciando autenticacao da senha pessoal. Usu?io: "+login_name);
+		String senhaUsuario = "";
+		String saltUsuario = "";
+		
+		try {
+			String query = "SELECT * FROM USUARIOS WHERE LOGIN_NAME='"+login_name+"';";
+			Statement stmt = conn.createStatement();
+			ResultSet dadosUsuario = stmt.executeQuery(query);
+
+			if (!dadosUsuario.next())
+				System.out.println("UsuÃ¡rio nÃ£o encontrado!");
+
+			senhaUsuario = dadosUsuario.getString("SENHA");
+			saltUsuario = dadosUsuario.getString("SALT");
+
+			stmt.close();
+			dadosUsuario.close();
+		}
+		catch (SQLException e) {
+			System.err.println(e);
+			System.out.println("Erro ao buscar usuÃ¡rio no banco de dados.");
+			System.exit(1);
+		}			
+
 		int tentativas = 0;
 
 		while (tentativas < 3){
 
-			/* Obtém senha através do teclado virtual numérico */
+			/* Obt? senha atrav? do teclado virtual num?ico */
 			List<int[]> senha = geraTecladoVirtual();
 
 			System.out.println("Senha digitada:");
@@ -68,60 +92,53 @@ public class autenticacaoSenha {
 			}
 			System.out.println();
 
-			try{
-				if (verificaSenha(senha, dadosUsuario.getString("SENHA"), dadosUsuario.getString("SALT"))){
-					/* PASSA PARA PROXIMA ETAPA */
-					tentativas = 0;
-					System.out.println("Senha correta!");
-				}
-				else{
-					tentativas += 1;
-					System.out.println("Senha incorreta!");
-				}
-
+			if (verificaSenha(senha, senhaUsuario, saltUsuario)){
+				/* PASSA PARA PROXIMA ETAPA */
+				tentativas = 0;
+				System.out.println("Senha correta!");
 			}
-			catch (SQLException e) {
-				System.err.println(e);
-				System.out.println("Erro ao obter dados do usuário.");
-				System.exit(1);
+			else{
+				tentativas += 1;
+				System.out.println("Senha incorreta!");
 			}
 
 		}// fim while
 
 		/* Passou de 3 tentativas -> Bloqueia a conta */
 
-		System.out.println("Número de tentativas excedido. Você está bloqueado por 2min.");
+		System.out.println("N?mero de tentativas excedido. Voc?est?bloqueado por 2min.");
 		
-		String query = "UPDATE TABLE USUARIOS SET BLOQUEADO=1 WHERE LOGIN_NAME='"+login_name+"';";
+		String query = "UPDATE USUARIOS SET BLOQUEADO=1 WHERE LOGIN_NAME='"+login_name+"';";
 
 		try {
-			Connection conn = conexaoBD.getInstance().getConnection();
 			Statement stmt = conn.createStatement();
-			stmt.executeUpdate(query);
+			int res = stmt.executeUpdate(query);
+
+			if (res == 0)
+				System.out.println("Update nÃ£o retornou resultados...");
 
 			if (stmt != null)
         		stmt.close();
+        	System.out.println("Usuario bloqueado!");
 		}
 		catch (SQLException e) {
 			System.err.println(e);
-			System.out.println("Erro ao atualizar usuário no banco de dados.");
+			System.out.println("Erro ao bloquear usuario no banco de dados.");
 			System.exit(1);
 		}
 		
 		timer = new Timer();		
 		
-		timer.schedule(block, 120000);
-		
 		block = new TimerTask() {
 			@Override
 			public void run() {
-				System.out.println("Você já pode tentar novamente!");
+				System.out.println("Voce ja pode tentar novamente!");
 		        timer.cancel(); //Terminate the timer thread
 		        
 		        
 		        String query = "UPDATE USUARIOS SET BLOQUEADO=0 WHERE LOGIN_NAME='"+login_name+"';";
 				try {
-					Connection conn = conexaoBD.getInstance().getConnection();
+					conn = conexaoBD.getInstance().getConnection();
 					Statement stmt = conn.createStatement();
 					stmt.executeUpdate(query);
 
@@ -130,12 +147,14 @@ public class autenticacaoSenha {
 				}
 				catch (SQLException e) {
 					System.err.println(e);
-					System.out.println("Erro ao atualizar usuario no banco de dados.");
+					System.out.println("Erro ao desbloquear usuario no banco de dados.");
 					System.exit(1);
 				}
 			
 			}
 		};
+		
+		timer.schedule(block, 120000);
 	
 		return;
 
@@ -171,13 +190,13 @@ public class autenticacaoSenha {
 		/* Array que guarda a senha (em pares) */
 		List<int[]> senha = new ArrayList<>();
 
-		/* Começa a capturar os "cliques" em cada botao do teclado. Nessa simulaçao, captura do teclado o numero equivalente a cada botao */
+		/* Come? a capturar os "cliques" em cada botao do teclado. Nessa simula?o, captura do teclado o numero equivalente a cada botao */
 		int numBotaoClicado;
 		int j = 0;
 		while(j<9){
 
 			/* Imprime o teclado atual */
-			System.out.println("Digite o numero de cada botão (que seria) pressionado no teclado (ate 9 digitos). Digite -1 para terminar (ENTER).");
+			System.out.println("Digite o numero de cada bot? (que seria) pressionado no teclado (ate 9 digitos). Digite -1 para terminar (ENTER).");
 			System.out.println("Teclado:");
 			for(int i=0; i<5; i++){
 				System.out.print("Botao "+(i+1)+": [");
@@ -190,12 +209,12 @@ public class autenticacaoSenha {
 
 			/* Captura digito referente ao numero do botao*/
 			while((numBotaoClicado = scanner.nextInt()) != -1 && ( numBotaoClicado < 1 ||  numBotaoClicado > 5))
-				System.out.println("Número do botão inválido!");
+				System.out.println("N?mero do bot? inv?ido!");
 			
 
 			if(numBotaoClicado == -1)
 				if (senha.size() < 6){
-					System.out.println("A senha deve conter pelo menos 6 dígitos.");
+					System.out.println("A senha deve conter pelo menos 6 d?itos.");
 					continue;
 				}
 				else
@@ -221,7 +240,7 @@ public class autenticacaoSenha {
 		String senhaCorrente = "";
 		int[] indices = new int[9];
 
-		/* Testa todas as possiveis combinações de pares */
+		/* Testa todas as possiveis combina?es de pares */
 		for(indices[0]=0; indices[0]<2; indices[0]++)
 			for(indices[1]=0; indices[1]<2; indices[1]++)
 				for(indices[2]=0; indices[2]<2; indices[2]++)
@@ -256,7 +275,7 @@ public class autenticacaoSenha {
 							
 							*/
 
-		/* NÃ£o achou nenhuma combinação de digitos valida */
+		/* NÃ£o achou nenhuma combina?o de digitos valida */
 		return false;
 			
 	}
@@ -294,26 +313,26 @@ public class autenticacaoSenha {
 	}
 
 
-	private void criaUserTeste(){
+	// private void criaUserTeste(){
+	private void desbloqueaUsersTeste(){
 
-		String salt = geraSaltAleatorio();
-		String senha = "01234567";
-		String login_name = "teste@teste.com";
-		String nome = "Teste";
-		int grupo = 2;
-		byte certificado = 0x22;
-		int bloqueado = 0;
+		// String salt = geraSaltAleatorio();
+		// String senha = "01234567";
+		// String login_name = "teste@teste.com";
+		// String nome = "Teste";
+		// int grupo = 2;
+		// byte certificado = 0x22;
+		// int bloqueado = 0;
 
-		String senhaHash = geraHashDaSenha(senha, salt);
+		// String senhaHash = geraHashDaSenha(senha, salt);
 
-		System.out.println(salt);
-		System.out.println(senhaHash);
-		System.out.println(senhaHash.length());
-
-		String insert = "INSERT INTO USUARIOS VALUES ('"+login_name+"','"+nome+"',"+grupo+",'"+salt+"','"+senhaHash+"',"+certificado+","+bloqueado+");";
+		// System.out.println(salt);
+		// System.out.println(senhaHash);
+		// System.out.println(senhaHash.length());
 
 		try {
-			Connection conn = conexaoBD.getInstance().getConnection();
+			// String insert = "INSERT INTO USUARIOS VALUES ('"+login_name+"','"+nome+"',"+grupo+",'"+salt+"','"+senhaHash+"',"+certificado+","+bloqueado+");";
+			String insert = "UPDATE USUARIOS SET BLOQUEADO=0 WHERE (LOGIN_NAME='admin@admin.com' OR LOGIN_NAME='teste@teste.com');";
 			Statement stmt = conn.createStatement();
 			stmt.executeUpdate(insert);
 
@@ -322,11 +341,12 @@ public class autenticacaoSenha {
 		}
 		catch (SQLException e) {
 			System.err.println(e);
-			System.out.println("Erro ao atualizar usuário no banco de dados.");
+			System.out.println("Erro ao atualizar usuÃ¡rio no banco de dados.");
 			System.exit(1);
 		}
 
-		System.out.println("Usuário criado com sucesso!");
+		// System.out.println("Usuario criado com sucesso!");
+		System.out.println("Usuarios desbloqueados com sucesso!");
 
 	}
 
