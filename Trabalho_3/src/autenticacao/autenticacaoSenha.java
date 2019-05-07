@@ -9,12 +9,16 @@ import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class autenticacaoSenha {
 	
 	private static autenticacaoSenha authSenha = null;
 	private Random ran = null;
 	private MessageDigest md = null;
+	private Timer timer;
+	private TimerTask block;
 
 	private autenticacaoSenha() {
 		
@@ -40,27 +44,27 @@ public class autenticacaoSenha {
 
 		/* FALTA:
 				- Criar interface com teclado virtual para receber (pares de) digitos da senha.
-				- Bloquear usuÃ¡rio caso haja mais de 3 tentativas e voltar para a etapa anterior.
+				- Bloquear usuário caso haja mais de 3 tentativas e voltar para a etapa anterior.
 				- É necessario criar um evento que será chamado em um tempo estipulado para desbloquear o usuario.
 				- Passar para proxima etapa caso senha esteja correta.
 		*/
 
-		System.out.println("Iniciando autenticacao da senha pessoal. UsuÃ¡rio: "+login_name);
+		System.out.println("Iniciando autenticacao da senha pessoal. Usuário: "+login_name);
 		
 		int tentativas = 0;
 
 		while (tentativas < 3){
 
-			/* ObtÃ©m senha atravÃ©s do teclado virtual numÃ©rico */
+			/* Obtém senha através do teclado virtual numérico */
 			List<int[]> senha = geraTecladoVirtual();
 
 			System.out.println("Senha digitada:");
 			for(int i=0; i<senha.size(); i++){
-				System.out.print("[ ");
+				System.out.print("[");
 				System.out.print(senha.get(i)[0]);
 				System.out.print(" ou ");
 				System.out.print(senha.get(i)[1]);
-				System.out.print("] ,  ");
+				System.out.print("]  ");
 			}
 			System.out.println();
 
@@ -78,7 +82,7 @@ public class autenticacaoSenha {
 			}
 			catch (SQLException e) {
 				System.err.println(e);
-				System.out.println("Erro ao obter dados do usuÃ¡rio.");
+				System.out.println("Erro ao obter dados do usuário.");
 				System.exit(1);
 			}
 
@@ -86,6 +90,8 @@ public class autenticacaoSenha {
 
 		/* Passou de 3 tentativas -> Bloqueia a conta */
 
+		System.out.println("Número de tentativas excedido. Você está bloqueado por 2min.");
+		
 		String query = "UPDATE TABLE USUARIOS SET BLOQUEADO=1 WHERE LOGIN_NAME='"+login_name+"';";
 
 		try {
@@ -98,10 +104,39 @@ public class autenticacaoSenha {
 		}
 		catch (SQLException e) {
 			System.err.println(e);
-			System.out.println("Erro ao atualizar usuÃ¡rio no banco de dados.");
+			System.out.println("Erro ao atualizar usuário no banco de dados.");
 			System.exit(1);
 		}
 		
+		timer = new Timer();		
+		
+		timer.schedule(block, 120000);
+		
+		block = new TimerTask() {
+			@Override
+			public void run() {
+				System.out.println("Você já pode tentar novamente!");
+		        timer.cancel(); //Terminate the timer thread
+		        
+		        
+		        String query = "UPDATE USUARIOS SET BLOQUEADO=0 WHERE LOGIN_NAME='"+login_name+"';";
+				try {
+					Connection conn = conexaoBD.getInstance().getConnection();
+					Statement stmt = conn.createStatement();
+					stmt.executeUpdate(query);
+
+					if (stmt != null)
+		        		stmt.close();
+				}
+				catch (SQLException e) {
+					System.err.println(e);
+					System.out.println("Erro ao atualizar usuario no banco de dados.");
+					System.exit(1);
+				}
+			
+			}
+		};
+	
 		return;
 
 	}
@@ -136,31 +171,31 @@ public class autenticacaoSenha {
 		/* Array que guarda a senha (em pares) */
 		List<int[]> senha = new ArrayList<>();
 
-		/* ComeÃ§a a capturar os "cliques" em cada botao do teclado. Nessa simulaÃ§Ã£o, captura do teclado o numero equivalente a cada botÃ£o */
+		/* Começa a capturar os "cliques" em cada botao do teclado. Nessa simulaçao, captura do teclado o numero equivalente a cada botao */
 		int numBotaoClicado;
 		int j = 0;
 		while(j<9){
 
 			/* Imprime o teclado atual */
-			System.out.println("Digite o nÃºmero de cada botÃ£o (que seria) pressionado no teclado (atÃ© 9 digitos). Digite -1 para terminar (ENTER).");
+			System.out.println("Digite o numero de cada botão (que seria) pressionado no teclado (ate 9 digitos). Digite -1 para terminar (ENTER).");
 			System.out.println("Teclado:");
 			for(int i=0; i<5; i++){
-				System.out.print("BotÃ£o "+(i+1)+": [ ");
+				System.out.print("Botao "+(i+1)+": [");
 				System.out.print(digitosTeclado[i][0]);
 				System.out.print(" ou ");
 				System.out.print(digitosTeclado[i][1]);
-				System.out.print("] ,    ");
+				System.out.print("]  ");
 			}
 			System.out.println();
 
 			/* Captura digito referente ao numero do botao*/
 			while((numBotaoClicado = scanner.nextInt()) != -1 && ( numBotaoClicado < 1 ||  numBotaoClicado > 5))
-				System.out.println("NÃºmero do botÃ£o invÃ¡lido!");
+				System.out.println("Número do botão inválido!");
 			
 
 			if(numBotaoClicado == -1)
 				if (senha.size() < 6){
-					System.out.println("A senha deve conter pelo menos 6 dÃ­gitos.");
+					System.out.println("A senha deve conter pelo menos 6 dígitos.");
 					continue;
 				}
 				else
@@ -186,7 +221,7 @@ public class autenticacaoSenha {
 		String senhaCorrente = "";
 		int[] indices = new int[9];
 
-		/* Testa todas as possiveis combinaÃ§Ãµes de pares */
+		/* Testa todas as possiveis combinações de pares */
 		for(indices[0]=0; indices[0]<2; indices[0]++)
 			for(indices[1]=0; indices[1]<2; indices[1]++)
 				for(indices[2]=0; indices[2]<2; indices[2]++)
@@ -221,7 +256,7 @@ public class autenticacaoSenha {
 							
 							*/
 
-		/* NÃ£o achou nenhuma combinaÃ§Ã£o de digitos vÃ¡lida */
+		/* NÃ£o achou nenhuma combinação de digitos valida */
 		return false;
 			
 	}
@@ -287,11 +322,11 @@ public class autenticacaoSenha {
 		}
 		catch (SQLException e) {
 			System.err.println(e);
-			System.out.println("Erro ao atualizar usuÃ¡rio no banco de dados.");
+			System.out.println("Erro ao atualizar usuário no banco de dados.");
 			System.exit(1);
 		}
 
-		System.out.println("Usuario criado com sucesso!");
+		System.out.println("Usuário criado com sucesso!");
 
 	}
 
