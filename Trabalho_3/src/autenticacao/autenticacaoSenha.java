@@ -47,6 +47,7 @@ public class autenticacaoSenha {
 
 		/* FALTA:
 				- Criar interface com teclado virtual para receber (pares de) digitos da senha.
+				- Detectar numero de botao invalido (ex: caracteres..)
 		*/
 		System.out.println("");
 		System.out.println("#### AUTENTICACAO POR SENHA - 2a ETAPA ####");
