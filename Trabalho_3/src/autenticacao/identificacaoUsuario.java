@@ -1,10 +1,11 @@
 package autenticacao;
 
-import conexaoBD.conexaoBD;
 import java.sql.*;
 import java.util.Scanner;
 import java.util.regex.Matcher; 
 import java.util.regex.Pattern;
+
+import banco.*;
 
 public class identificacaoUsuario{
 	
@@ -62,12 +63,15 @@ public class identificacaoUsuario{
 
 				else{
 					System.out.println("Usuário encontrado!");
+
+					Usuario usuario = new Usuario(result.getString("LOGIN_NAME"), result.getString("NOME"), result.getInt("GRUPO"), result.getString("SALT"), result.getString("SENHA"), result.getBytes("CERTIFICADO_DIGITAL"), result.getInt("BLOQUEADO"), result.getInt("NUMERO_ACESSOS"), result.getInt("NUMERO_CONSULTAS"));
+
 					/* Fecha statement para passar para 2 etapa */
 					stmt.close();
 					result.close();
 
 					/* PASSANDO PARA PROXIMA ETAPA DE AUTENTICACAO */
-					autenticacaoSenha.getInstance().iniciarAutenticacaoSenha(login_name);
+					autenticacaoSenha.getInstance().iniciarAutenticacaoSenha(usuario);
 					System.out.println("");
 					System.out.println("#### IDENTIFICACAO DO USUARIO - 1a ETAPA ####");
 					System.out.println("");
@@ -88,7 +92,7 @@ public class identificacaoUsuario{
 
 
 	private boolean emailValido(String email){
-		String regex = "^[(a-zA-Z-0-9-\\_\\+\\.)]+@[(a-z-A-z)]+\\.[(a-zA-z)]{2,3}$";
+		String regex = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$";
 
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(email);

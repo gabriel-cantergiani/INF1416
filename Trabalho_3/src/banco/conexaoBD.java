@@ -1,4 +1,4 @@
-package conexaoBD;
+package banco;
 
 import java.sql.*;
 

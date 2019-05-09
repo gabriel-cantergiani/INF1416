@@ -7,7 +7,7 @@ public class Main {
 		/* Classe que implementa 1a etapa de autenticação */
 		identificacaoUsuario idUsuario = identificacaoUsuario.getInstance();
 		idUsuario.iniciarIdentificacao();
-
+		
 	}
 
 }

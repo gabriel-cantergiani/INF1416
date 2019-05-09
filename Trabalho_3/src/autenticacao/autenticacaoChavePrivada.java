@@ -1,6 +1,6 @@
 package autenticacao;
 
-import conexaoBD.conexaoBD;
+import sistema.MenuPrincipal;
 
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -17,6 +17,8 @@ import java.util.Scanner;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+
+import banco.*;
 
 import java.util.Base64;
 import java.io.ByteArrayInputStream;
@@ -52,10 +54,9 @@ public class autenticacaoChavePrivada {
 	}
 
 
-	protected void iniciarAutenticacaoChavePrivada(String login_name) {
+	protected void iniciarAutenticacaoChavePrivada(Usuario usuario) {
 
 		/*FALTA
-		 		- Colocar loop de 3 tentativas e bloquear usuario com 3 tentativas erradas e voltar pra etapa 1
 				- Abrir filechooser para selecionar arquivo .pem com a chave criptografada e codificada em b64
 				- Criar interface
 				- Se verificacao for positiva, segue para o sistema
@@ -65,29 +66,42 @@ public class autenticacaoChavePrivada {
 		System.out.println("#### AUTENTICACAO POR CHAVE PRIVADA - 3a ETAPA ####");
 		System.out.println("");
 
-		// OBTEM CHAVE PRIVADA CIFRADA
-		byte [] chavePrivadaCifrada = obtemChavePrivadaCifrada();
-		
-		// DECRIPTA
-		String chavePrivadaPEM_B64String = decriptaChavePrivada(chavePrivadaCifrada);
+		int tentativas = 0;
+
+		while (tentativas < 3){
+
+			// OBTEM CHAVE PRIVADA CIFRADA
+			byte [] chavePrivadaCifrada = obtemChavePrivadaCifrada();
 			
-		// DECODIFICA
-		PrivateKey privateKey = decodificaChavePrivada(chavePrivadaPEM_B64String);
-		
-		// GERA ASSINATURA DE ARRAY ALEATORIO
-		byte [] assinatura = geraAssinatura(privateKey);
-		
-		// BUSCA CERTIFICADO DIGITAL NO BANCO E OBTEM CHAVE PUBLICA
-		PublicKey publicKey = obtemChavePublica(login_name);
-		
-		// VERIFICA ASSINATURA
-		if(verificaAssinatura(assinatura, publicKey)){
-			System.out.println("Chave privada autenticada com sucesso!");
-			// Passa para a proxima etapa
-		}
-		else{
-			System.out.println("Chave privada nao autenticada.");
-		}
+			// DECRIPTA
+			String chavePrivadaPEM_B64String = decriptaChavePrivada(chavePrivadaCifrada);
+				
+			// DECODIFICA
+			PrivateKey privateKey = decodificaChavePrivada(chavePrivadaPEM_B64String);
+			
+			// GERA ASSINATURA DE ARRAY ALEATORIO
+			byte [] assinatura = geraAssinatura(privateKey);
+			
+			// BUSCA CERTIFICADO DIGITAL NO BANCO E OBTEM CHAVE PUBLICA
+			PublicKey publicKey = obtemChavePublica(usuario.certificado);
+			
+			// VERIFICA ASSINATURA
+			if(verificaAssinatura(assinatura, publicKey)){
+				System.out.println("Chave privada autenticada com sucesso! Acesso concedido!");
+				tentativas = 0;
+				// Passa para a proxima etapa
+				MenuPrincipal.getInstance().iniciarMenuPrincipal(usuario);
+				return;
+
+			}
+			else{
+				System.out.println("Chave privada invalida!");
+				tentativas += 1;
+			}
+		}// fim while
+
+		// Passou de 3 tentativas -> bloqueia usuario
+		usuario.bloqueiaUsuario();
 
 	}
 
@@ -199,31 +213,9 @@ public class autenticacaoChavePrivada {
 		return assinatura;
 	}
 
-	private PublicKey obtemChavePublica(String login_name){
+	private PublicKey obtemChavePublica(byte [] certificadoPEM){
 
-		byte [] certificadoPEM = null;
 		PublicKey publicKey = null;
-
-		// Obtem certificado do usuario do Banco de Dados
-		try {
-			String query = "SELECT * FROM USUARIOS WHERE LOGIN_NAME='"+login_name+"';";
-			Statement stmt = conn.createStatement();
-			ResultSet dadosUsuario = stmt.executeQuery(query);
-
-			if (!dadosUsuario.next())
-				System.out.println("Usuario nao encontrado!");
-
-			// Obtem bytes do certificado
-			certificadoPEM = dadosUsuario.getBytes("CERTIFICADO_DIGITAL");
-
-			stmt.close();
-			dadosUsuario.close();
-		}
-		catch (SQLException e) {
-			System.err.println(e);
-			System.out.println("Erro ao buscar usuario no banco de dados.");
-			System.exit(1);
-		}
 
 		try {
 			// correcao no arquivo...
@@ -241,6 +233,8 @@ public class autenticacaoChavePrivada {
 	  		X509Certificate certificado = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certificadoBytes));
 
 	  		publicKey = certificado.getPublicKey();
+	  		
+	  		System.out.println("Chave publica do usuario obtida com sucesso!");
 	  		
 		}
 		catch(Exception e) {
@@ -274,78 +268,5 @@ public class autenticacaoChavePrivada {
 
 	}
 
-	//################################################### FUNCAO DE TESTE
-	private byte [] obtemCertificadoDigitalCodificado(){
-
-		// Obtem caminho para arquivo da chave privada
-		scanner = new Scanner(System.in);
-		System.out.print("Digite o caminho para o arquivo contendo o certificado digital: ");
-		String caminhoChave = scanner.nextLine();
-		byte [] certificadoDigitalPEM = null;
-
-		// Abre arquivo com chave privada
-		try{
-			Path path = Paths.get(caminhoChave);
-			certificadoDigitalPEM = Files.readAllBytes(path);
-		}
-		catch(IOException e){
-			System.err.println(e);
-			System.out.println("Erro ao abrir arquivo da chave privada");
-			System.exit(1);
-		}
-
-		return certificadoDigitalPEM;
-	}
-
-	//################################################## FUNCAO DE TESTE
-	public void insereCertificadoNoBanco(String login_name){
-
-		byte [] certificadoPEM = obtemCertificadoDigitalCodificado();
-
-		try {
-			String update = "UPDATE USUARIOS SET CERTIFICADO_DIGITAL=? WHERE LOGIN_NAME=?;";
-			PreparedStatement stmt = conn.prepareStatement(update);
-			stmt.setBytes(1,certificadoPEM);
-			stmt.setString(2,login_name);
-			int res = stmt.executeUpdate();
-
-			System.out.println("Resultado: "+Integer.toString(res));
-
-			stmt.close();
-		}
-		catch (SQLException e) {
-			System.err.println(e);
-			System.out.println("Erro ao atualizar certificado no banco de dados.");
-			System.exit(1);
-		}
-
-		System.out.println("Certificado inserido no banco");
-	}
-
-	//##################################################### FUNCAO DE TESTE
-	public void verificaCertificado(){
-
-		byte [] certificadoPEM = obtemCertificadoDigitalCodificado();
-
-		try {
-			String s1 = new String(certificadoPEM, "UTF8");
-			int index = s1.indexOf("-----BEGIN CERTIFICATE-----\n");
-			String certificadoPEM_B64String = s1.substring(index);
-			certificadoPEM_B64String = certificadoPEM_B64String.replace("-----BEGIN CERTIFICATE-----\n", "");
-			certificadoPEM_B64String = certificadoPEM_B64String.replace("-----END CERTIFICATE-----", "");
-			System.out.println(certificadoPEM_B64String);
-
-			byte[] certificadoBytes = Base64.getMimeDecoder().decode(certificadoPEM_B64String);
-	  		CertificateFactory cf = CertificateFactory.getInstance("x509");
-	  		X509Certificate certificado = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certificadoBytes));
-	  		System.out.println("################################################################");
-	  		System.out.println(certificado.getSigAlgName());
-		}
-		catch(Exception e) {
-			System.err.println(e);
-			System.exit(1);
-		}
-		
-	}
 
 }
