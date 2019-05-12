@@ -10,6 +10,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import banco.*;
+import sistema.MenuPrincipal;
 
 public class autenticacaoSenha {
 	
@@ -42,7 +43,7 @@ public class autenticacaoSenha {
 
 		while (tentativas < 3){
 
-			/* Obt? senha atrav? do teclado virtual num?ico */
+			/* Obtem senha atraves do teclado virtual numerico */
 			List<int[]> senha = geraTecladoVirtual();
 
 			System.out.println("Senha digitada:");
@@ -60,6 +61,7 @@ public class autenticacaoSenha {
 				tentativas = 0;
 				System.out.println("Senha correta!");
 				autenticacaoChavePrivada.getInstance().iniciarAutenticacaoChavePrivada(usuario);
+				
 				return;
 			}
 			else{
@@ -108,13 +110,13 @@ public class autenticacaoSenha {
 		/* Array que guarda a senha (em pares) */
 		List<int[]> senha = new ArrayList<>();
 
-		/* Come? a capturar os "cliques" em cada botao do teclado. Nessa simula?o, captura do teclado o numero equivalente a cada botao */
+		/* Comeca a capturar os "cliques" em cada botao do teclado. Nessa simulacao, captura do teclado o numero equivalente a cada botao */
 		int numBotaoClicado = 0;
 		int j = 0;
 		while(j<9){
 
 			/* Imprime o teclado atual */
-			System.out.println("Digite o numero de cada bot? (que seria) pressionado no teclado (ate 9 digitos). Digite -1 para terminar (ENTER).");
+			System.out.println("Digite o numero de cada botao (que seria) pressionado no teclado (ate 9 digitos). Digite -1 para terminar (ENTER).");
 			System.out.println("Teclado:");
 			for(int i=0; i<5; i++){
 				System.out.print("Botao "+(i+1)+": [");
@@ -134,7 +136,7 @@ public class autenticacaoSenha {
 
 			if(numBotaoClicado == -1)
 				if (senha.size() < 6){
-					System.out.println("A senha deve conter pelo menos 6 d?itos.");
+					System.out.println("A senha deve conter pelo menos 6 digitos.");
 					continue;
 				}
 				else
@@ -160,7 +162,7 @@ public class autenticacaoSenha {
 		String senhaCorrente = "";
 		int[] indices = new int[9];
 
-		/* Testa todas as possiveis combina?es de pares */
+		/* Testa todas as possiveis combinacoes de pares */
 		for(indices[0]=0; indices[0]<2; indices[0]++)
 			for(indices[1]=0; indices[1]<2; indices[1]++)
 				for(indices[2]=0; indices[2]<2; indices[2]++)
@@ -176,7 +178,7 @@ public class autenticacaoSenha {
 											// Chama funcao que obtem hash da senha+salt em string hex
 											String valorCalculado = geraHashDaSenha(senhaCorrente, saltUsuario);
 											System.out.println(senhaCorrente+"   :  "+valorCalculado);
-											// Verifica se valorCalculado é igual a valorArmazenado da senha 
+											// Verifica se valorCalculado eh igual a valorArmazenado da senha 
 								        	if (valorCalculado.equals(senhaUsuario))
 								        		return true;
 
@@ -195,7 +197,7 @@ public class autenticacaoSenha {
 							
 							*/
 
-		/* Não achou nenhuma combina?o de digitos valida */
+		/* Nao achou nenhuma combinacao de digitos valida */
 		return false;
 			
 	}

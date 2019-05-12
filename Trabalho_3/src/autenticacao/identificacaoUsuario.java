@@ -6,6 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import banco.*;
+import sistema.MenuPrincipal;
 
 public class identificacaoUsuario{
 	
@@ -28,7 +29,7 @@ public class identificacaoUsuario{
 				- Criar interface para receber input do login_name.
 		*/
 		
-		/* Conex√£o com o banco de dados */
+		/* Conexao com o banco de dados */
 		System.out.println("#### IDENTIFICACAO DO USUARIO - 1a ETAPA ####");
 		System.out.println("");
 		
@@ -65,11 +66,13 @@ public class identificacaoUsuario{
 					System.out.println("Usu·rio encontrado!");
 
 					Usuario usuario = new Usuario(result.getString("LOGIN_NAME"), result.getString("NOME"), result.getInt("GRUPO"), result.getString("SALT"), result.getString("SENHA"), result.getBytes("CERTIFICADO_DIGITAL"), result.getInt("BLOQUEADO"), result.getInt("NUMERO_ACESSOS"), result.getInt("NUMERO_CONSULTAS"));
-
+					
 					/* Fecha statement para passar para 2 etapa */
 					stmt.close();
 					result.close();
 
+					MenuPrincipal.getInstance().iniciarMenuPrincipal(usuario);
+					
 					/* PASSANDO PARA PROXIMA ETAPA DE AUTENTICACAO */
 					autenticacaoSenha.getInstance().iniciarAutenticacaoSenha(usuario);
 					System.out.println("");
