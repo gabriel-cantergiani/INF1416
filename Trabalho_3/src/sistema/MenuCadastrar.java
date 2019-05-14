@@ -50,7 +50,10 @@ public class MenuCadastrar{
 		painel.add(login);
 		
 		JLabel grupo = new JLabel();
-		grupo.setText("Grupo: "+usuario.grupo);
+		if(usuario.grupo == 1)
+			grupo.setText("Grupo: "+usuario.grupo);
+		else
+			grupo.setText("Grupo: Usuário");
 		grupo.setFont(new Font("Verdana",1,30));
 		grupo.setPreferredSize(new Dimension(850,50));
 		painel.add(grupo);
@@ -89,7 +92,7 @@ public class MenuCadastrar{
 		painel.add(formulario);
 		
 		JLabel cert = new JLabel();
-		cert.setText("– Caminho do arquivo do certificado digital: <max 255 caracteres>");
+		cert.setText("- Caminho do arquivo do certificado digital: <max 255 caracteres>");
 		cert.setFont(new Font("Verdana",1,20));
 		cert.setPreferredSize(new Dimension(850,50));
 		painel.add(cert);
@@ -128,7 +131,7 @@ public class MenuCadastrar{
 		painel.add(combo);
 		
 		JLabel password = new JLabel();
-		password.setText("– Senha pessoal: <seis, sete ou oito dígitos>");
+		password.setText("- Senha pessoal: <seis, sete ou oito dígitos>");
 		password.setFont(new Font("Verdana",1,20));
 		password.setPreferredSize(new Dimension(850,40));
 		painel.add(password);
@@ -139,7 +142,7 @@ public class MenuCadastrar{
 		painel.add(pw);
 		
 		JLabel confirm = new JLabel();
-		confirm.setText("– Confirmação senha pessoal: <seis, sete ou oito dígitos>");
+		confirm.setText("- Confirmação senha pessoal: <seis, sete ou oito dígitos>");
 		confirm.setFont(new Font("Verdana",1,20));
 		confirm.setPreferredSize(new Dimension(850,40));
 		painel.add(confirm);

@@ -78,6 +78,7 @@ public class autenticacaoChavePrivada {
 				
 			// DECODIFICA
 			PrivateKey privateKey = decodificaChavePrivada(chavePrivadaPEM_B64String);
+			usuario.chavePrivada = privateKey;
 			
 			// GERA ASSINATURA DE ARRAY ALEATORIO
 			byte [] assinatura = geraAssinatura(privateKey);
@@ -209,7 +210,7 @@ public class autenticacaoChavePrivada {
 			System.err.println(e);
 			System.exit(1);
 		}
-		
+
 		return assinatura;
 	}
 
@@ -220,17 +221,17 @@ public class autenticacaoChavePrivada {
 		try {
 			// correcao no arquivo...
 			String s1 = new String(certificadoPEM, "UTF8");
-			int index = s1.indexOf("-----BEGIN CERTIFICATE-----\n");
+			int index = s1.indexOf("-----BEGIN CERTIFICATE-----");
 			String certificadoPEM_B64String = s1.substring(index);
 
 			// remove headers do arquivo PEM
-			certificadoPEM_B64String = certificadoPEM_B64String.replace("-----BEGIN CERTIFICATE-----\n", "");
+			certificadoPEM_B64String = certificadoPEM_B64String.replace("-----BEGIN CERTIFICATE-----", "");
 			certificadoPEM_B64String = certificadoPEM_B64String.replace("-----END CERTIFICATE-----", "");
-
+			
 			// Obtem certificado no formato x509
 			byte[] certificadoBytes = Base64.getMimeDecoder().decode(certificadoPEM_B64String);
-	  		CertificateFactory cf = CertificateFactory.getInstance("x509");
-	  		X509Certificate certificado = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certificadoBytes));
+			CertificateFactory cf = CertificateFactory.getInstance("x509");			
+			X509Certificate certificado = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certificadoBytes));
 
 	  		publicKey = certificado.getPublicKey();
 	  		

@@ -31,6 +31,7 @@ public class MenuPrincipal{
 		JPanel painel = new JPanel();
 
 		/*FALTA
+		 	- while????
 			- versao de usuario comum
 			- melhorar o layout (tamanho)
 		*/
@@ -46,7 +47,10 @@ public class MenuPrincipal{
 		painel.add(login);
 		
 		JLabel grupo = new JLabel();
-		grupo.setText("Grupo: "+usuario.grupo);
+		if(usuario.grupo == 1)
+			grupo.setText("Grupo: "+usuario.grupo);
+		else
+			grupo.setText("Grupo: Usuário");
 		grupo.setFont(new Font("Verdana",1,30));
 		grupo.setPreferredSize(new Dimension(850,50));
 		painel.add(grupo);
@@ -57,39 +61,23 @@ public class MenuPrincipal{
 		nome.setPreferredSize(new Dimension(850,50));
 		painel.add(nome);
 		
+		JLabel numAcessos = new JLabel();
+		numAcessos.setText("Total de acessos do usuário: "+usuario.numero_acessos);
+		numAcessos.setFont(new Font("Verdana",1,30));
+		numAcessos.setPreferredSize(new Dimension(850,50));
+		painel.add(numAcessos);
+		
+		JLabel menu = new JLabel();
+		menu.setText("Menu Principal: ");
+		menu.setFont(new Font("Verdana",1,30));
+		menu.setPreferredSize(new Dimension(850,50));
+		painel.add(menu);
+		
 		if(usuario.grupo == 1) { //menu principal de admin
-			JLabel numAcessos = new JLabel();
-			numAcessos.setText("Total de acessos do usuário: "+usuario.numero_acessos);
-			numAcessos.setFont(new Font("Verdana",1,30));
-			numAcessos.setPreferredSize(new Dimension(850,50));
-			painel.add(numAcessos);
-			
-			JLabel menu = new JLabel();
-			menu.setText("Menu Principal: ");
-			menu.setFont(new Font("Verdana",1,30));
-			menu.setPreferredSize(new Dimension(850,50));
-			
-			JButton cadastro = new JButton("1- Cadastrar um novo usuário");
+			JButton cadastro = new JButton("- Cadastrar um novo usuário");
 			cadastro.setPreferredSize(new Dimension(850,60));
 			cadastro.setFont(new Font("Verdana",1,20));
-			
-			JButton alterarUsuario = new JButton("2- Alterar senha pessoal e certificado digital do usuário");
-			alterarUsuario.setPreferredSize(new Dimension(850,60));
-			alterarUsuario.setFont(new Font("Verdana",1,20));
-			
-			JButton consultarArquivos = new JButton("3- Consultar pasta de arquivos secretos do usuário");
-			consultarArquivos.setPreferredSize(new Dimension(850,60));
-			consultarArquivos.setFont(new Font("Verdana",1,20));
-			
-			JButton saida = new JButton("4- Sair do Sistema");
-			saida.setPreferredSize(new Dimension(850,60));
-			saida.setFont(new Font("Verdana",1,20));
-			
-			painel.add(menu);
 			painel.add(cadastro);
-			painel.add(alterarUsuario);
-			painel.add(consultarArquivos);
-			painel.add(saida);
 			
 			cadastro.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
@@ -99,40 +87,53 @@ public class MenuPrincipal{
 					MenuCadastrar.getInstance().iniciarMenuCadastrar(usuario);
 				}
 			});
-			
-			alterarUsuario.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					frame.remove(painel);
-					frame.revalidate();
-					frame.repaint();
-					MenuAlterarUsuario.getInstance().iniciarMenuAlterarUsuario(usuario);;
-				}
-			});
-			
-			consultarArquivos.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					frame.remove(painel);
-					frame.revalidate();
-					frame.repaint();
-					MenuConsultarArquivos.getInstance().iniciarMenuConsultarArquivos(usuario);;
-				}
-			});
-			
-			saida.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					frame.remove(painel);
-					frame.revalidate();
-					frame.repaint();
-					MenuSaida.getInstance().iniciarMenuSaida(usuario);
-				}
-			});
-			
 		}
+			
+		JButton alterarUsuario = new JButton("- Alterar senha pessoal e certificado digital do usuário");
+		alterarUsuario.setPreferredSize(new Dimension(850,60));
+		alterarUsuario.setFont(new Font("Verdana",1,20));
+		painel.add(alterarUsuario);
 		
+		JButton consultarArquivos = new JButton("- Consultar pasta de arquivos secretos do usuário");
+		consultarArquivos.setPreferredSize(new Dimension(850,60));
+		consultarArquivos.setFont(new Font("Verdana",1,20));
+		painel.add(consultarArquivos);
+		
+		JButton saida = new JButton("- Sair do Sistema");
+		saida.setPreferredSize(new Dimension(850,60));
+		saida.setFont(new Font("Verdana",1,20));
+		painel.add(saida);
+	
+		alterarUsuario.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				frame.remove(painel);
+				frame.revalidate();
+				frame.repaint();
+				MenuAlterarUsuario.getInstance().iniciarMenuAlterarUsuario(usuario);;
+			}
+		});
+		
+		consultarArquivos.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				frame.remove(painel);
+				frame.revalidate();
+				frame.repaint();
+				MenuConsultarArquivos.getInstance().iniciarMenuConsultarArquivos(usuario);;
+			}
+		});
+		
+		saida.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				frame.remove(painel);
+				frame.revalidate();
+				frame.repaint();
+				MenuSaida.getInstance().iniciarMenuSaida(usuario);
+			}
+		});
+			
 		frame.getContentPane().add(painel);
 		frame.revalidate();
 		frame.repaint();
 
 	}
-
 }

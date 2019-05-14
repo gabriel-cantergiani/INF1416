@@ -9,11 +9,11 @@ import banco.*;
 import sistema.MenuPrincipal;
 
 public class identificacaoUsuario{
-	
 	private static identificacaoUsuario identificacao_usuario = null;
-
+	Connection conn;
+	
 	private identificacaoUsuario() {
-
+		conn = conexaoBD.getInstance().getConnection();
 	}
 
 	/* SINGLETON */
@@ -32,8 +32,6 @@ public class identificacaoUsuario{
 		/* Conexao com o banco de dados */
 		System.out.println("#### IDENTIFICACAO DO USUARIO - 1a ETAPA ####");
 		System.out.println("");
-		
-		Connection conn = conexaoBD.getInstance().getConnection();
 		
 		/* Recebe input do usuario pelo console (temporario) */
 		Scanner scanner = new Scanner(System.in);
@@ -70,8 +68,6 @@ public class identificacaoUsuario{
 					/* Fecha statement para passar para 2 etapa */
 					stmt.close();
 					result.close();
-
-					MenuPrincipal.getInstance().iniciarMenuPrincipal(usuario);
 					
 					/* PASSANDO PARA PROXIMA ETAPA DE AUTENTICACAO */
 					autenticacaoSenha.getInstance().iniciarAutenticacaoSenha(usuario);

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.PrivateKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.sql.*;
@@ -12,6 +13,8 @@ import java.util.Base64;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import autenticacao.autenticacaoSenha;
 
 public class Usuario {
 	
@@ -24,6 +27,7 @@ public class Usuario {
 	public int bloqueado;
 	public int numero_acessos;
 	public int numero_consultas;
+	public PrivateKey chavePrivada;
 	Connection conn;
 	
 
@@ -99,7 +103,6 @@ public class Usuario {
 
 	public void insereUsuario(){
 
-
 		try {
 			String insert = "INSERT INTO USUARIOS VALUES (?,?,?,?,?,?,?,?,?)";
 			PreparedStatement stmt = conn.prepareStatement(insert);
@@ -119,7 +122,7 @@ public class Usuario {
 		}
 		catch (SQLException e) {
 			System.err.println(e);
-			System.out.println("Erro ao atualizar usuário no banco de dados.");
+			System.out.println("Erro ao atualizar usuario no banco de dados.");
 			System.exit(1);
 		}
 
@@ -254,6 +257,30 @@ public class Usuario {
 		}
 
 		this.numero_consultas += 1;		
+
+	}
+	
+	public static void updateSenhaUsuario(String login_name){
+		
+		Connection conn = conexaoBD.getInstance().getConnection();
+		String salt = autenticacaoSenha.geraSaltAleatorio();
+		String senhaHash = autenticacaoSenha.geraHashDaSenha("012345", salt);
+
+		String update = "UPDATE USUARIOS SET salt='"+salt+"',senha='"+senhaHash+"' WHERE LOGIN_NAME='"+login_name+"';";
+		int res = 0;
+		try {
+			Statement stmt = conn.createStatement();
+			res = stmt.executeUpdate(update);
+
+			System.out.println("Numero de linhas afetadas: "+res);
+
+			stmt.close();
+		}
+		catch (SQLException e) {
+			System.err.println(e);
+			System.out.println("Erro ao incrementar numero de consultas do usuário no banco de dados.");
+			System.exit(1);
+		}	
 
 	}
 

@@ -10,7 +10,7 @@ public class MenuFrame extends JFrame{
 	private static MenuFrame xframe = null;
 	
 	private MenuFrame(){
-		this.setBounds(0,0,960,900);
+		this.setBounds(0,0,960,850);
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		this.setVisible(true);
 	} 
