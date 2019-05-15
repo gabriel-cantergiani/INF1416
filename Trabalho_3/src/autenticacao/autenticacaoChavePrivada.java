@@ -1,7 +1,5 @@
 package autenticacao;
 
-import sistema.MenuPrincipal;
-
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyFactory;
@@ -14,11 +12,17 @@ import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.sql.*;
 import java.util.Scanner;
+import javax.swing.*;
+
+import java.awt.*;
+import java.awt.event.*;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 
 import banco.*;
+import sistema.MenuPrincipal;
+import Interface.MenuFrame;
 
 import java.util.Base64;
 import java.io.ByteArrayInputStream;
@@ -33,10 +37,17 @@ public class autenticacaoChavePrivada {
 	private Scanner scanner;
 	private Signature signature;
 	private byte[] arrayAleatorio;
-	Connection conn;
+	private Connection conn;
+	private MenuFrame frame;
+	private JPanel painel;
+	int tentativas;
+	private byte [] chavePrivadaCifrada;
+	private ActionListener cliqueBuscaChave = null;
+	private ActionListener cliqueDecriptaChave = null;
 
 	private autenticacaoChavePrivada() {
 		conn = conexaoBD.getInstance().getConnection();
+		frame = MenuFrame.getInstance();
 		try {
 			signature = Signature.getInstance("MD5WithRSA");
 		}
@@ -54,7 +65,7 @@ public class autenticacaoChavePrivada {
 	}
 
 
-	protected void iniciarAutenticacaoChavePrivada(Usuario usuario) {
+	public void iniciarAutenticacaoChavePrivada(Usuario usuario) {
 
 		/*FALTA
 				- Abrir filechooser para selecionar arquivo .pem com a chave criptografada e codificada em b64
@@ -66,52 +77,146 @@ public class autenticacaoChavePrivada {
 		System.out.println("#### AUTENTICACAO POR CHAVE PRIVADA - 3a ETAPA ####");
 		System.out.println("");
 
-		int tentativas = 0;
+		painel = new JPanel();
+		painel.setLayout(null);
+		tentativas = 0;
 
-		while (tentativas < 3){
+		JLabel label = new JLabel();
+		label.setText("Caminho do arquivo contendo a chave privada:");
+		label.setFont(new Font("Verdana",1,25));
+		label.setBounds(frame.getWidth()/2 - 350, 150, 700, 80);
+		painel.add(label);
 
-			// OBTEM CHAVE PRIVADA CIFRADA
-			byte [] chavePrivadaCifrada = obtemChavePrivadaCifrada();
-			
-			// DECRIPTA
-			String chavePrivadaPEM_B64String = decriptaChavePrivada(chavePrivadaCifrada);
+		JTextArea input = new JTextArea(4,10);
+		input.setEditable(true);
+		input.setFont(new Font("Verdana",1,20));
+		input.setBounds(frame.getWidth()/2 - 400, label.getY()+100, 800, 200);
+		input.setLineWrap(true);
+		painel.add(input);
+
+		JButton botao = new JButton("Buscar");
+		botao.setFont(new Font("Verdana",1,25));
+		botao.setBounds(frame.getWidth()/2 - 100, input.getY()+250, 150, 70);
+		painel.add(botao);
+
+
+		cliqueBuscaChave = new ActionListener() {
+
+			public void actionPerformed(ActionEvent event){
+
+				// OBTEM CHAVE PRIVADA CIFRADA
+				try{
+					Path path = Paths.get(input.getText());
+					chavePrivadaCifrada = Files.readAllBytes(path);
+				}
+				catch(IOException e){
+					System.err.println(e);
+					System.out.println("Erro ao abrir arquivo da chave privada");
+					
+					JOptionPane.showMessageDialog(frame, "Erro ao abrir arquivo! Tente novamente.");
+					return;				
+				}
+
+				JOptionPane.showMessageDialog(frame, "Arquivo aberto com sucesso!");
+				label.setText("Digita a frase secreta de decriptação:");
+				label.setBounds(frame.getWidth()/2 - 275, 150, 550, 80);
+				input.setText("");
+				input.setBounds(frame.getWidth()/2 - 400, label.getY()+100, 800, 60);
+				botao.setText("Decriptar");
+				botao.setBounds(frame.getWidth()/2 - 100, input.getY()+100, 200, 70);
+				botao.removeActionListener(this);
+				botao.addActionListener(cliqueDecriptaChave);
+
+			}
+
+		};
+
+		 
+		cliqueDecriptaChave = new ActionListener() {
+
+			public void actionPerformed(ActionEvent event){
+
+					String msg;
+
+					// DECRIPTA
+					String chavePrivadaPEM_B64String = decriptaChavePrivada(chavePrivadaCifrada, input.getText());
 				
-			// DECODIFICA
-			PrivateKey privateKey = decodificaChavePrivada(chavePrivadaPEM_B64String);
-			usuario.chavePrivada = privateKey;
-			
-			// GERA ASSINATURA DE ARRAY ALEATORIO
-			byte [] assinatura = geraAssinatura(privateKey);
-			
-			// BUSCA CERTIFICADO DIGITAL NO BANCO E OBTEM CHAVE PUBLICA
-			PublicKey publicKey = obtemChavePublica(usuario.certificado);
-			
-			// VERIFICA ASSINATURA
-			if(verificaAssinatura(assinatura, publicKey)){
-				System.out.println("Chave privada autenticada com sucesso! Acesso concedido!");
-				tentativas = 0;
-				// Passa para a proxima etapa
-				MenuPrincipal.getInstance().iniciarMenuPrincipal(usuario);
-				return;
+					if (chavePrivadaPEM_B64String != null) {
+						// DECODIFICA
+						PrivateKey privateKey = decodificaChavePrivada(chavePrivadaPEM_B64String);
+						
+						// guarda chave privada no usuario para uso futuro
+						usuario.chavePrivada = privateKey;
+						
+						// GERA ASSINATURA DE ARRAY ALEATORIO
+						byte [] assinatura = geraAssinatura(privateKey);
+						
+						// BUSCA CERTIFICADO DIGITAL NO BANCO E OBTEM CHAVE PUBLICA
+						PublicKey publicKey = obtemChavePublica(usuario.certificado);
+						
+						// VERIFICA ASSINATURA
+						if(verificaAssinatura(assinatura, publicKey)){
+							JOptionPane.showMessageDialog(frame, "Chave privada autenticada com sucesso! Acesso concedido!");
+							tentativas = 0;
+
+							// Remove painel atual
+							frame.remove(painel);
+							frame.revalidate();
+							frame.repaint();
+
+							// Passa para a proxima etapa
+							MenuPrincipal.getInstance().iniciarMenuPrincipal(usuario);
+							return;
+						}
+						else {
+							tentativas += 1;
+							msg = "Chave privada inválida!";
+						}
+						
+					}
+					else {
+						tentativas += 1;
+						msg = "Frase secreta incorreta!";
+					}
+
+
+					if (tentativas == 3){
+						usuario.bloqueiaUsuario();
+						JOptionPane.showMessageDialog(frame, msg+" Número de tentativas excedido! Usuário bloqueado por 2 minutos.");
+						// Remove painel atual
+						frame.remove(painel);
+						frame.revalidate();
+						frame.repaint();
+						identificacaoUsuario.getInstance().iniciarIdentificacao();
+						return;
+					}
+
+					label.setText("Caminho do arquivo contendo a chave privada:");
+					label.setBounds(frame.getWidth()/2 - 350, 150, 700, 80);
+					input.setText("");
+					input.setBounds(frame.getWidth()/2 - 400, label.getY()+100, 800, 200);
+					botao.setText("Buscar");
+					botao.setBounds(frame.getWidth()/2 - 100, input.getY()+250, 150, 70);
+					botao.removeActionListener(this);
+					botao.addActionListener(cliqueBuscaChave);
+					JOptionPane.showMessageDialog(frame, msg+" Você tem mais "+(3-tentativas)+" tentativa(s).");
+
 
 			}
-			else{
-				System.out.println("Chave privada invalida!");
-				tentativas += 1;
-			}
-		}// fim while
 
-		// Passou de 3 tentativas -> bloqueia usuario
-		usuario.bloqueiaUsuario();
+		};
+		
+		
+		botao.addActionListener(cliqueBuscaChave);
+		
+		frame.getContentPane().add(painel);
+		frame.revalidate();
+		frame.repaint();
+
 
 	}
 
 	private byte [] obtemChavePrivadaCifrada(){
-
-		// JFileChooser fileChooser = new FileChooser();
-		// fileChooser.setDialogTitle("Escolha o arquivo contendo a chave privada");
-		// fileChooser.setFileFilter(new FileNameExtensionFilter("Arquivos PEM (Privacy Enhanced Mail)"), "pem");
-		// int ret = fileChooser.showOpenDialog(JFRAME AQUI);
 
 		// Obtem caminho para arquivo da chave privada
 		scanner = new Scanner(System.in);
@@ -127,18 +232,15 @@ public class autenticacaoChavePrivada {
 		catch(IOException e){
 			System.err.println(e);
 			System.out.println("Erro ao abrir arquivo da chave privada");
-			System.exit(1);
+			return null;
 		}
 
 		return chavePrivadaCifrada;
 	}
 
-	private String decriptaChavePrivada(byte [] chavePrivadaCifrada){
+	private String decriptaChavePrivada(byte [] chavePrivadaCifrada, String fraseSecreta){
 
 		String chavePrivadaPEM_B64String = null;
-
-		System.out.print("Digite a frase secreta de decriptação:");
-		String fraseSecreta = scanner.nextLine();
 
 		try{
 			// Inicializa o gerador PRNG com a frase secreta (semente)
@@ -160,12 +262,12 @@ public class autenticacaoChavePrivada {
 		}
 		catch(InvalidKeyException e){
 			System.err.println(e);
-			System.exit(1);
+			return null;
 		}
 		catch(Exception e){
 			System.err.println(e);
 			System.out.println("Erro ao decriptar arquivo da chave privada.");
-			System.exit(1);
+			return null;
 		}
 
 		return chavePrivadaPEM_B64String;

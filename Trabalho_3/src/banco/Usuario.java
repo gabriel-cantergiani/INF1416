@@ -14,7 +14,10 @@ import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.swing.JOptionPane;
+
 import autenticacao.autenticacaoSenha;
+import Interface.MenuFrame;
 
 public class Usuario {
 	
@@ -78,8 +81,7 @@ public class Usuario {
 			public void run() {
 				System.out.println("Voce ja pode tentar novamente!");
 		        timer.cancel(); //Terminate the timer thread
-		        
-		        
+		        		        
 		        String query = "UPDATE USUARIOS SET BLOQUEADO=0 WHERE LOGIN_NAME='"+login_name+"';";
 				try {
 					Connection conn = conexaoBD.getInstance().getConnection();
@@ -94,6 +96,8 @@ public class Usuario {
 					System.out.println("Erro ao desbloquear usuario no banco de dados.");
 					System.exit(1);
 				}
+
+				JOptionPane.showMessageDialog(MenuFrame.getInstance(), "O Usuário "+login_name+" foi desbloqueado e já pode acessar novamente!");
 			
 			}
 		};

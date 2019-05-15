@@ -2,15 +2,21 @@ package Interface;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import sistema.*;
+
 import java.awt.*;
 import java.awt.event.*;
-import sistema.*;
 
 public class MenuFrame extends JFrame{
 	private static MenuFrame xframe = null;
 	
 	private MenuFrame(){
-		this.setBounds(0,0,960,850);
+
+		Toolkit tk = Toolkit.getDefaultToolkit();
+		Dimension ss = tk.getScreenSize();
+
+		this.setBounds(ss.width/4, (2*ss.height-ss.width)/4, ss.width/2, ss.width/2);
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		this.setVisible(true);
 	} 

@@ -4,16 +4,22 @@ import java.sql.*;
 import java.util.Scanner;
 import java.util.regex.Matcher; 
 import java.util.regex.Pattern;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 
+import Interface.MenuFrame;
 import banco.*;
 import sistema.MenuPrincipal;
 
 public class identificacaoUsuario{
 	private static identificacaoUsuario identificacao_usuario = null;
 	Connection conn;
+	MenuFrame frame;
 	
 	private identificacaoUsuario() {
 		conn = conexaoBD.getInstance().getConnection();
+		frame = MenuFrame.getInstance();
 	}
 
 	/* SINGLETON */
@@ -25,67 +31,87 @@ public class identificacaoUsuario{
 	
 	public void iniciarIdentificacao() {
 
-		/* FALTA:
-				- Criar interface para receber input do login_name.
-		*/
 		
 		/* Conexao com o banco de dados */
 		System.out.println("#### IDENTIFICACAO DO USUARIO - 1a ETAPA ####");
 		System.out.println("");
+		JPanel painel = new JPanel();
+		painel.setLayout(null);
 		
-		/* Recebe input do usuario pelo console (temporario) */
-		Scanner scanner = new Scanner(System.in);
-		//Boolean login_valido = false;
-		String login_name = null;
+		JLabel labelLogin = new JLabel();
+		labelLogin.setText("Digite o login_name do usuário");
+		labelLogin.setFont(new Font("Verdana",1,25));
+		labelLogin.setBounds(frame.getWidth()/2 - 225, 150, 450, 80);
+		painel.add(labelLogin);
+		
+		JTextArea inputLogin = new JTextArea(4,10);
+		inputLogin.setEditable(true);
+		inputLogin.setFont(new Font("Verdana",1,25));
+		inputLogin.setBounds(frame.getWidth()/2 - 400, labelLogin.getY()+100, 800, 60);
+		inputLogin.setLineWrap(true);
+		painel.add(inputLogin);
 
-		while (true) {
-			System.out.print("Digite o login_name: ");
-			login_name = scanner.nextLine();
+		JButton buscarLogin = new JButton("Buscar");
+		buscarLogin.setFont(new Font("Verdana",1,25));
+		buscarLogin.setBounds(frame.getWidth()/2 - 100, inputLogin.getY()+100, 200, 70);
+		painel.add(buscarLogin);
 
-			if (!emailValido(login_name)){
-				System.out.println("O login_name deve ser em um formato de email valido!");
-				continue;
-			}
+		frame.getContentPane().add(painel);
+		frame.revalidate();
+		frame.repaint();
+		
+		buscarLogin.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event){
 
-			/* Busca login no banco */
-			String query = "SELECT * FROM USUARIOS WHERE LOGIN_NAME='"+login_name+"';";
-			ResultSet result = null;
-			try {
-				Statement stmt = conn.createStatement();
-				result = stmt.executeQuery(query);
+				String login_name = inputLogin.getText();
 
-				if (!result.next())
-					System.out.println("Usuário não encontrado!");
-
-				else if (result.getInt("BLOQUEADO") == 1)
-					System.out.println("Este usuário está temporariamente bloqueado!");
-
-				else{
-					System.out.println("Usuário encontrado!");
-
-					Usuario usuario = new Usuario(result.getString("LOGIN_NAME"), result.getString("NOME"), result.getInt("GRUPO"), result.getString("SALT"), result.getString("SENHA"), result.getBytes("CERTIFICADO_DIGITAL"), result.getInt("BLOQUEADO"), result.getInt("NUMERO_ACESSOS"), result.getInt("NUMERO_CONSULTAS"));
-					
-					/* Fecha statement para passar para 2 etapa */
-					stmt.close();
-					result.close();
-					
-					/* PASSANDO PARA PROXIMA ETAPA DE AUTENTICACAO */
-					autenticacaoSenha.getInstance().iniciarAutenticacaoSenha(usuario);
-					System.out.println("");
-					System.out.println("#### IDENTIFICACAO DO USUARIO - 1a ETAPA ####");
-					System.out.println("");
+				if (!emailValido(login_name)){
+					JOptionPane.showMessageDialog(frame, "O login_name deve ser em um formato de email valido!");
+					return;
 				}
 
-				if (stmt != null)
-	        		stmt.close();
+				/* Busca login no banco */
+				String query = "SELECT * FROM USUARIOS WHERE LOGIN_NAME='"+login_name+"';";
+				ResultSet result = null;
+				try {
+					Statement stmt = conn.createStatement();
+					result = stmt.executeQuery(query);
+
+					if (!result.next())
+						JOptionPane.showMessageDialog(frame, "Usuário não encontrado!");
+
+					else if (result.getInt("BLOQUEADO") == 1)
+						JOptionPane.showMessageDialog(frame, "Este usuário está temporariamente bloqueado (2 minutos) !");
+
+					else{
+
+						Usuario usuario = new Usuario(result.getString("LOGIN_NAME"), result.getString("NOME"), result.getInt("GRUPO"), result.getString("SALT"), result.getString("SENHA"), result.getBytes("CERTIFICADO_DIGITAL"), result.getInt("BLOQUEADO"), result.getInt("NUMERO_ACESSOS"), result.getInt("NUMERO_CONSULTAS"));
+						
+						/* Fecha statement para passar para 2 etapa */
+						stmt.close();
+						result.close();
+
+						// Remove painel atual
+						frame.remove(painel);
+						frame.revalidate();
+						frame.repaint();
+						
+						/* PASSANDO PARA PROXIMA ETAPA DE AUTENTICACAO */
+						autenticacaoSenha.getInstance().iniciarAutenticacaoSenha(usuario);
+					}
+
+					if (stmt != null)
+		        		stmt.close();
+				}
+				catch (SQLException e) {
+					System.err.println(e);
+					System.out.println("Erro ao buscar usuário no banco de dados.");
+					System.exit(1);
+				}			
+
 			}
-			catch (SQLException e) {
-				System.err.println(e);
-				System.out.println("Erro ao buscar usuário no banco de dados.");
-				System.exit(1);
-			}			
-			
-		}//fim while
+
+		});
 
 	}
 

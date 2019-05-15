@@ -8,17 +8,25 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 
 import banco.*;
 import sistema.MenuPrincipal;
+import Interface.MenuFrame;
 
 public class autenticacaoSenha {
 	
 	private static autenticacaoSenha authSenha = null;
 	private Connection conn;
+	MenuFrame frame;
+	JPanel painel;
+	int tentativas;
 
 	private autenticacaoSenha() {
 		conn = conexaoBD.getInstance().getConnection();
+		frame = MenuFrame.getInstance();
 	}
 
 	/* SINGLETON */
@@ -39,43 +47,106 @@ public class autenticacaoSenha {
 		System.out.println("");
 		System.out.println("Iniciando autenticacao da senha pessoal. Usuario: "+usuario.login_name);
 
-		int tentativas = 0;
 
-		while (tentativas < 3){
+		painel = new JPanel();
+		painel.setLayout(null);
+		tentativas = 0;
 
-			/* Obtem senha atraves do teclado virtual numerico */
-			List<int[]> senha = geraTecladoVirtual();
+		/* Array que guarda a senha (em pares) */
+		List<int[]> senha = new ArrayList<>();
+		
+		JLabel labelLogin = new JLabel();
+		labelLogin.setText("Senha de 6 a 8 dígitos:");
+		labelLogin.setFont(new Font("Verdana",1,25));
+		labelLogin.setBounds(frame.getWidth()/2 - 165, 150, 330, 80);
+		painel.add(labelLogin);
 
-			System.out.println("Senha digitada:");
-			for(int i=0; i<senha.size(); i++){
-				System.out.print("[");
-				System.out.print(senha.get(i)[0]);
-				System.out.print(" ou ");
-				System.out.print(senha.get(i)[1]);
-				System.out.print("]  ");
+		/* Lista de botoes do teclado */
+		JButton [] botoes = new JButton[5];
+
+		ActionListener cliqueBotaoDigito = new ActionListener() {
+
+			public void actionPerformed(ActionEvent e){
+
+				if (senha.size() >= 8){
+					JOptionPane.showMessageDialog(frame, "A senha deve conter no máximo 8 dígitos!");
+					return;
+				}
+
+				JButton botao = (JButton) e.getSource();
+				int [] par = obtemParSenha( botao.getText() );
+				senha.add(par);
+
+				atualizaBotoes(botoes);
 			}
-			System.out.println();
 
-			if (verificaSenha(senha, usuario.senhaHash, usuario.salt)){
-				/* PASSA PARA PROXIMA ETAPA */
-				tentativas = 0;
-				System.out.println("Senha correta!");
-				autenticacaoChavePrivada.getInstance().iniciarAutenticacaoChavePrivada(usuario);
-				
-				return;
+		};
+
+		ActionListener cliqueBotaoOK = new ActionListener() {
+
+			public void actionPerformed(ActionEvent e){
+
+				if (senha.size() < 6){
+					JOptionPane.showMessageDialog(frame, "A senha deve conter no mínimo 6 dígitos!");
+					return;
+				}
+
+				if (verificaSenha(senha, usuario.senhaHash, usuario.salt)){
+					/* PASSA PARA PROXIMA ETAPA */
+					tentativas = 0;
+					
+					// Remove painel atual
+					frame.remove(painel);
+					frame.revalidate();
+					frame.repaint();
+					
+					autenticacaoChavePrivada.getInstance().iniciarAutenticacaoChavePrivada(usuario);
+					
+					return;
+				}
+				else{
+					tentativas += 1;
+
+					if (tentativas == 3){
+						usuario.bloqueiaUsuario();
+						JOptionPane.showMessageDialog(frame, "Número de tentativas excedido! Usuário bloqueado por 2 minutos.");
+						// Remove painel atual
+						frame.remove(painel);
+						frame.revalidate();
+						frame.repaint();
+						identificacaoUsuario.getInstance().iniciarIdentificacao();
+						return;
+					}
+
+					senha.clear();
+					JOptionPane.showMessageDialog(frame, "Senha incorreta! Você tem mais "+(3-tentativas)+" tentativa(s).");
+					atualizaBotoes(botoes);
+				}
+
 			}
-			else{
-				tentativas += 1;
-				System.out.println("Senha incorreta!");
-			}
 
-		}// fim while
+		};
 
-		/* Passou de 3 tentativas -> Bloqueia a conta */
+		for(int i=0; i<5; i++){
+			botoes[i] = new JButton("Botao");
+			botoes[i].setFont(new Font("Verdana",1,15));
+			botoes[i].setBounds(150*i+100, 300, 100, 100);
+			botoes[i].addActionListener(cliqueBotaoDigito);
+			painel.add(botoes[i]);
+		}
 
-		usuario.bloqueiaUsuario();
-	
-		return;
+		atualizaBotoes(botoes);
+
+		JButton botaoOK = new JButton("OK");
+		botaoOK.setFont(new Font("Verdana",1,20));
+		botaoOK.setBounds(frame.getWidth()/2 - 50, 500, 100, 100);
+		botaoOK.addActionListener(cliqueBotaoOK);
+		painel.add(botaoOK);
+
+
+		frame.getContentPane().add(painel);
+		frame.revalidate();
+		frame.repaint();
 
 	}
 
@@ -100,62 +171,27 @@ public class autenticacaoSenha {
 
 	}
 
-	private List<int[]> geraTecladoVirtual(){
-
-		Scanner scanner = new Scanner(System.in);
+	private void atualizaBotoes(JButton [] botoes){
 
 		/* Gera lista aletoria de pares para o teclado virtual */
 		int [][] digitosTeclado = geraListaAleatoria();
 
-		/* Array que guarda a senha (em pares) */
-		List<int[]> senha = new ArrayList<>();
+		for(int i=0; i<5; i++)
+			botoes[i].setText(digitosTeclado[i][0]+" ou "+digitosTeclado[i][1]);
 
-		/* Comeca a capturar os "cliques" em cada botao do teclado. Nessa simulacao, captura do teclado o numero equivalente a cada botao */
-		int numBotaoClicado = 0;
-		int j = 0;
-		while(j<9){
-
-			/* Imprime o teclado atual */
-			System.out.println("Digite o numero de cada botao (que seria) pressionado no teclado (ate 9 digitos). Digite -1 para terminar (ENTER).");
-			System.out.println("Teclado:");
-			for(int i=0; i<5; i++){
-				System.out.print("Botao "+(i+1)+": [");
-				System.out.print(digitosTeclado[i][0]);
-				System.out.print(" ou ");
-				System.out.print(digitosTeclado[i][1]);
-				System.out.print("]  ");
-			}
-			System.out.println();
-
-			/* Captura digito referente ao numero do botao*/
-			numBotaoClicado = scanner.nextInt();
-			while(numBotaoClicado != -1 && ( numBotaoClicado < 1 ||  numBotaoClicado > 5)){
-				System.out.println("Numero do botao invalido! Tente novamente:");
-				numBotaoClicado = scanner.nextInt();
-			}
-
-			if(numBotaoClicado == -1)
-				if (senha.size() < 6){
-					System.out.println("A senha deve conter pelo menos 6 digitos.");
-					continue;
-				}
-				else
-					break;
-
-			/* Adiciona par de digitos na senha */
-			senha.add(digitosTeclado[numBotaoClicado-1]);
-
-			/* Gera nova lista aletoria de pares para o teclado virtual */
-			digitosTeclado = geraListaAleatoria();
-
-			/* Contabiliza numero de digitos da senha */
-			j+=1;
-		}
-
-		return senha;
+		painel.repaint();
 
 	}
 
+	private int[] obtemParSenha(String par){
+
+		int [] parInt = new int[2];
+
+		parInt[0] = Character.getNumericValue(par.charAt(0));
+		parInt[1] = Character.getNumericValue(par.charAt(5));
+
+		return parInt;
+	}
 
 	private boolean verificaSenha(List<int[]> senhaTestada, String senhaUsuario, String saltUsuario){
 
