@@ -10,8 +10,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Key;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.Signature;
 import java.sql.Connection;
 import java.util.Scanner;
 
@@ -49,7 +51,7 @@ public class MenuConsultarArquivos{
 		JPanel painel = new JPanel();
 
 		/*FALTA
-			- decriptar o env com a chave privada etc
+			- numero de linhas dos arquivos
 		*/
 		
 		System.out.println("");
@@ -128,7 +130,6 @@ public class MenuConsultarArquivos{
 					System.exit(1);
 				}
 				
-				
 				// decripta envelope digital
 				Cipher cipher;
 				byte [] semente = null;
@@ -140,10 +141,8 @@ public class MenuConsultarArquivos{
 					e1.printStackTrace();
 				}
 				
-				
 				// Inicializa o gerador PRNG com a frase secreta (semente)
 				Key chaveSimetrica = null;
-				
 				try {
 					SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
 					secureRandom.setSeed(semente);
@@ -156,33 +155,72 @@ public class MenuConsultarArquivos{
 					e1.printStackTrace();
 				}
 				
-				
-				
+				String arquivoIndex = "";
+				byte[] arquivoIndexBytes = null;
 				try {
 					// Decripta chave privada (codificada em B64) usando a chave simetrica gerada
 					cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
 					cipher.init(Cipher.DECRYPT_MODE, chaveSimetrica);
-			    	byte[] arquivoIndexBytes = cipher.doFinal(cifraIndex);
-			    	String arquivoIndex;
+			    	arquivoIndexBytes = cipher.doFinal(cifraIndex);
 					arquivoIndex = new String(arquivoIndexBytes, "UTF8");
 					System.out.println( arquivoIndex );
 				} catch (Exception e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 		    	
 				// decriptar assinatura com chave publica do user01 que ta no certificado
+				byte[] digestAssinatura = null;
+				try {
+					cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+					cipher.init(Cipher.DECRYPT_MODE, usuario.chavePublica);
+					digestAssinatura = cipher.doFinal(assinaturaIndex);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
 				
 				// gerar digest do arquivoIndex
+				byte[] digestArquivo = null;
+				try {
+					MessageDigest md = MessageDigest.getInstance("MD5");
+					md.update(arquivoIndexBytes);
+					digestArquivo = md.digest();	
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
 				
 				// comparar digest do arquivo Index com digest obtido pela assinatura
+				System.out.println(digestAssinatura);
+				System.out.println(digestArquivo);
 				
 				// se estiver okk, listar linhas do arquivoIndex
+				String linha1 = arquivoIndex.substring(0, arquivoIndex.indexOf("\n"));
+				String linha2 = arquivoIndex.substring(arquivoIndex.indexOf("\n"));
+				
+				painel.remove(caminho);
+				painel.remove(caminhoPasta);
+				painel.remove(listar);
+				painel.remove(voltar);
+				
+				JLabel arqlinha1 = new JLabel();
+				arqlinha1.setText(linha1);
+				arqlinha1.setFont(new Font("Verdana",1,20));
+				arqlinha1.setPreferredSize(new Dimension(850,40));
+				painel.add(arqlinha1);
+				
+				JLabel arqlinha2 = new JLabel();
+				arqlinha2.setText(linha2);
+				arqlinha2.setFont(new Font("Verdana",1,20));
+				arqlinha2.setPreferredSize(new Dimension(850,40));
+				painel.add(arqlinha2);
+				
+				painel.add(voltar);
+				
+				frame.revalidate();
+				frame.repaint();
 				
 				// quando clicar em uma linha, decriptar envelope, arquivo e assinatura, verificar integridade e controle de acesso
 				
 				// caso positivo, guardar arquivo decriptado em novo arquivo
-				
 				
 			}
 		});

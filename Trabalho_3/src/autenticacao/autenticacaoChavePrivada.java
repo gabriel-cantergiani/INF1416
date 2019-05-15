@@ -144,7 +144,6 @@ public class autenticacaoChavePrivada {
 					if (chavePrivadaPEM_B64String != null) {
 						// DECODIFICA
 						PrivateKey privateKey = decodificaChavePrivada(chavePrivadaPEM_B64String);
-						
 						// guarda chave privada no usuario para uso futuro
 						usuario.chavePrivada = privateKey;
 						
@@ -153,6 +152,8 @@ public class autenticacaoChavePrivada {
 						
 						// BUSCA CERTIFICADO DIGITAL NO BANCO E OBTEM CHAVE PUBLICA
 						PublicKey publicKey = obtemChavePublica(usuario.certificado);
+						// guarda chave publica no usuario para uso futuro
+						usuario.chavePublica = publicKey;
 						
 						// VERIFICA ASSINATURA
 						if(verificaAssinatura(assinatura, publicKey)){
@@ -200,8 +201,6 @@ public class autenticacaoChavePrivada {
 					botao.removeActionListener(this);
 					botao.addActionListener(cliqueBuscaChave);
 					JOptionPane.showMessageDialog(frame, msg+" Você tem mais "+(3-tentativas)+" tentativa(s).");
-
-
 			}
 
 		};
