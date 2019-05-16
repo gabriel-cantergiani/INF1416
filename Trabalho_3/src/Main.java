@@ -1,12 +1,9 @@
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Time;
-import java.util.Calendar;
 import java.util.Date;
 
 import autenticacao.identificacaoUsuario;
 import banco.conexaoBD;
+import banco.Registro;
 
 public class Main {
 	
@@ -14,7 +11,10 @@ public class Main {
 		
 		/* iniciando conexao com o banco q sera usada durante todo o sistema */
 		Connection conn = conexaoBD.getInstance().getConnection();
-		java.time.LocalTime.now();
+		
+		Registro registro = new Registro();
+		registro.login_name = "";
+		registro.insereRegistro(1001);
 		
 		/* Classe que implementa 1a etapa de autenticacao */
 		identificacaoUsuario idUsuario = identificacaoUsuario.getInstance();
