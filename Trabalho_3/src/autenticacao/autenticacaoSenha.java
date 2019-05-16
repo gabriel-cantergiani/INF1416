@@ -51,14 +51,16 @@ public class autenticacaoSenha {
 		painel = new JPanel();
 		painel.setLayout(null);
 		tentativas = 0;
+		int larguraFrame = frame.getWidth();
+		int alturaFrame = frame.getHeight();
 
 		/* Array que guarda a senha (em pares) */
 		List<int[]> senha = new ArrayList<>();
 		
 		JLabel labelLogin = new JLabel();
 		labelLogin.setText("Senha de 6 a 8 dígitos:");
-		labelLogin.setFont(new Font("Verdana",1,25));
-		labelLogin.setBounds(frame.getWidth()/2 - 165, 150, 330, 80);
+		labelLogin.setFont(new Font("Verdana",1,larguraFrame/40));
+		labelLogin.setBounds(larguraFrame/2 - 165, alturaFrame/10, 330, 80);
 		painel.add(labelLogin);
 
 		/* Lista de botoes do teclado */
@@ -130,7 +132,7 @@ public class autenticacaoSenha {
 		for(int i=0; i<5; i++){
 			botoes[i] = new JButton("Botao");
 			botoes[i].setFont(new Font("Verdana",1,15));
-			botoes[i].setBounds(150*i+100, 300, 100, 100);
+			botoes[i].setBounds(larguraFrame/10 + i*17*(larguraFrame/100) , labelLogin.getY()+100, 12*larguraFrame/100, 12*larguraFrame/100);
 			botoes[i].addActionListener(cliqueBotaoDigito);
 			painel.add(botoes[i]);
 		}
@@ -139,7 +141,7 @@ public class autenticacaoSenha {
 
 		JButton botaoOK = new JButton("OK");
 		botaoOK.setFont(new Font("Verdana",1,20));
-		botaoOK.setBounds(frame.getWidth()/2 - 50, 500, 100, 100);
+		botaoOK.setBounds((100*larguraFrame - 12*larguraFrame)/200, labelLogin.getY()+300, 12*larguraFrame/100, 12*larguraFrame/100);
 		botaoOK.addActionListener(cliqueBotaoOK);
 		painel.add(botaoOK);
 

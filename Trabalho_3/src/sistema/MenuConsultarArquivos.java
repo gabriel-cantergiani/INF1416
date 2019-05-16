@@ -22,6 +22,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
@@ -126,13 +127,14 @@ public class MenuConsultarArquivos{
 				}
 				catch(IOException IOe){
 					System.err.println(IOe);
-					System.out.println("Erro ao abrir a pasta de indices");
-					System.exit(1);
+					JOptionPane.showMessageDialog(frame, "Erro ao abrir pasta fornecida!");
+					return;
 				}
 				
 				// decripta envelope digital
 				Cipher cipher;
 				byte [] semente = null;
+				System.out.println("OK1");
 				try {
 					cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 					cipher.init(Cipher.DECRYPT_MODE, usuario.chavePrivada);
@@ -143,6 +145,7 @@ public class MenuConsultarArquivos{
 				
 				// Inicializa o gerador PRNG com a frase secreta (semente)
 				Key chaveSimetrica = null;
+				System.out.println("OK2");
 				try {
 					SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
 					secureRandom.setSeed(semente);
@@ -154,7 +157,7 @@ public class MenuConsultarArquivos{
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
-				
+				System.out.println("OK3");
 				String arquivoIndex = "";
 				byte[] arquivoIndexBytes = null;
 				try {
@@ -167,52 +170,26 @@ public class MenuConsultarArquivos{
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
-		    	
+				System.out.println("OK4");
 				// decriptar assinatura com chave publica do user01 que ta no certificado e obter digest original
-				String digestAssinatura = null;
+				
 				try {
-					cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-					cipher.init(Cipher.DECRYPT_MODE, usuario.chavePublica);
-					byte [] digestAssinaturaBytes = cipher.doFinal(assinaturaIndex);
-
-					StringBuilder sb = new StringBuilder();
-					for(byte b:digestAssinaturaBytes){
-		        		sb.append(String.format("%02X", b));	
-		        	}
-		        	digestAssinatura = sb.toString();
+					Signature sig = Signature.getInstance("MD5withRSA");
+					sig.initVerify(usuario.chavePublica);
+					sig.update(arquivoIndexBytes);
+					
+					if (sig.verify(assinaturaIndex)) {
+						JOptionPane.showMessageDialog(frame, "Teste de integridade e autenticidade falhou! Você não têm permissão para acessar esta pasta de arquivos!");
+						return;
+					}
+					
+					System.out.println("Assinatura verificada! Arquivo decriptado corretamente!");
 
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
-				
-				// gerar novo digest do arquivoIndex
-				String digestArquivo = null;
-				try {
-					MessageDigest md = MessageDigest.getInstance("MD5");
-					md.update(arquivoIndexBytes);
-					byte [] digestArquivoBytes = md.digest();
 
-					StringBuilder sb = new StringBuilder();
-					for(byte b:digestArquivoBytes){
-		        		sb.append(String.format("%02X", b));	
-		        	}
-		        	digestArquivo = sb.toString();
-
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}
-				
-				// comparar digest do arquivo Index com digest obtido pela assinatura
-				System.out.println(digestAssinatura);
-				System.out.println(digestArquivo);
-				System.out.println(digestArquivo.equals(digestAssinatura));
-				
-				// se estiver okk, listar linhas do arquivoIndex
-				if (! digestArquivo.equals(digestAssinatura) ){
-					JOptionPane.showMessageDialog(frame, "Teste de integridade e autenticidade falhou! Você não têm permissão para acessar esta pasta de arquivos!");
-					return;
-				}
-
+				System.out.println(arquivoIndex);
 				String linha1 = arquivoIndex.substring(0, arquivoIndex.indexOf("\n"));
 				String linha2 = arquivoIndex.substring(arquivoIndex.indexOf("\n"));
 				

@@ -80,23 +80,25 @@ public class autenticacaoChavePrivada {
 		painel = new JPanel();
 		painel.setLayout(null);
 		tentativas = 0;
-
+		int larguraFrame = frame.getWidth();
+		int alturaFrame = frame.getHeight();
+		
 		JLabel label = new JLabel();
 		label.setText("Caminho do arquivo contendo a chave privada:");
-		label.setFont(new Font("Verdana",1,25));
-		label.setBounds(frame.getWidth()/2 - 350, 150, 700, 80);
+		label.setFont(new Font("Verdana",1,larguraFrame/40));
+		label.setBounds(frame.getWidth()/2 - 350, alturaFrame/10, 700, 80);
 		painel.add(label);
 
 		JTextArea input = new JTextArea(4,10);
 		input.setEditable(true);
-		input.setFont(new Font("Verdana",1,20));
-		input.setBounds(frame.getWidth()/2 - 400, label.getY()+100, 800, 200);
+		input.setFont(new Font("Verdana",1,larguraFrame/45));
+		input.setBounds((10*larguraFrame - 8*larguraFrame)/20, label.getY()+100, 8*larguraFrame/10, 3*alturaFrame/10);
 		input.setLineWrap(true);
 		painel.add(input);
 
 		JButton botao = new JButton("Buscar");
-		botao.setFont(new Font("Verdana",1,25));
-		botao.setBounds(frame.getWidth()/2 - 100, input.getY()+250, 150, 70);
+		botao.setFont(new Font("Verdana",1,larguraFrame/40));
+		botao.setBounds((10*larguraFrame - 2*larguraFrame)/20, input.getY()+250, 2*larguraFrame/10, 70);
 		painel.add(botao);
 
 
@@ -119,11 +121,11 @@ public class autenticacaoChavePrivada {
 
 				JOptionPane.showMessageDialog(frame, "Arquivo aberto com sucesso!");
 				label.setText("Digita a frase secreta de decriptação:");
-				label.setBounds(frame.getWidth()/2 - 275, 150, 550, 80);
+				label.setBounds(larguraFrame/2 - 225, alturaFrame/10, 550, 80);
 				input.setText("");
-				input.setBounds(frame.getWidth()/2 - 400, label.getY()+100, 800, 60);
+				input.setBounds((10*larguraFrame - 6*larguraFrame)/20, label.getY()+100, 6*larguraFrame/10, 60);
 				botao.setText("Decriptar");
-				botao.setBounds(frame.getWidth()/2 - 100, input.getY()+100, 200, 70);
+				botao.setBounds((10*larguraFrame - 2*larguraFrame)/20, input.getY()+100, 2*larguraFrame/10, 70);
 				botao.removeActionListener(this);
 				botao.addActionListener(cliqueDecriptaChave);
 
@@ -194,11 +196,11 @@ public class autenticacaoChavePrivada {
 					}
 
 					label.setText("Caminho do arquivo contendo a chave privada:");
-					label.setBounds(frame.getWidth()/2 - 350, 150, 700, 80);
+					label.setBounds(frame.getWidth()/2 - 350, alturaFrame/10, 700, 80);
 					input.setText("");
-					input.setBounds(frame.getWidth()/2 - 400, label.getY()+100, 800, 200);
+					input.setBounds((10*larguraFrame - 8*larguraFrame)/20, label.getY()+100, 8*larguraFrame/10, 3*alturaFrame/10);
 					botao.setText("Buscar");
-					botao.setBounds(frame.getWidth()/2 - 100, input.getY()+250, 150, 70);
+					botao.setBounds((10*larguraFrame - 2*larguraFrame)/20, input.getY()+250, 2*larguraFrame/10, 70);
 					botao.removeActionListener(this);
 					botao.addActionListener(cliqueBuscaChave);
 					JOptionPane.showMessageDialog(frame, msg+" Você tem mais "+(3-tentativas)+" tentativa(s).");

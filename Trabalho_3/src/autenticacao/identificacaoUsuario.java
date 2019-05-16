@@ -37,23 +37,24 @@ public class identificacaoUsuario{
 		System.out.println("");
 		JPanel painel = new JPanel();
 		painel.setLayout(null);
+		int larguraFrame = frame.getWidth();
 		
 		JLabel labelLogin = new JLabel();
 		labelLogin.setText("Digite o login_name do usuário");
-		labelLogin.setFont(new Font("Verdana",1,25));
-		labelLogin.setBounds(frame.getWidth()/2 - 225, 150, 450, 80);
+		labelLogin.setFont(new Font("Verdana",1,larguraFrame/40));
+		labelLogin.setBounds(larguraFrame/2 - 225, 150, 450, 80);
 		painel.add(labelLogin);
 		
 		JTextArea inputLogin = new JTextArea(4,10);
 		inputLogin.setEditable(true);
-		inputLogin.setFont(new Font("Verdana",1,25));
-		inputLogin.setBounds(frame.getWidth()/2 - 400, labelLogin.getY()+100, 800, 60);
+		inputLogin.setFont(new Font("Verdana",1,larguraFrame/40));
+		inputLogin.setBounds((10*larguraFrame - 8*larguraFrame)/20, labelLogin.getY()+100, 8*larguraFrame/10, 60);
 		inputLogin.setLineWrap(true);
 		painel.add(inputLogin);
 
 		JButton buscarLogin = new JButton("Buscar");
-		buscarLogin.setFont(new Font("Verdana",1,25));
-		buscarLogin.setBounds(frame.getWidth()/2 - 100, inputLogin.getY()+100, 200, 70);
+		buscarLogin.setFont(new Font("Verdana",1,larguraFrame/40));
+		buscarLogin.setBounds((10*larguraFrame - 2*larguraFrame)/20, inputLogin.getY()+100, 2*larguraFrame/10, 70);
 		painel.add(buscarLogin);
 
 		frame.getContentPane().add(painel);
