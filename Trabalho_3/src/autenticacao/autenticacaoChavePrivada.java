@@ -151,7 +151,7 @@ public class autenticacaoChavePrivada {
 						byte [] assinatura = geraAssinatura(privateKey);
 						
 						// BUSCA CERTIFICADO DIGITAL NO BANCO E OBTEM CHAVE PUBLICA
-						PublicKey publicKey = obtemChavePublica(usuario.certificado);
+						PublicKey publicKey = obtemCertificado(usuario.certificado).getPublicKey();
 						// guarda chave publica no usuario para uso futuro
 						usuario.chavePublica = publicKey;
 						
@@ -166,6 +166,7 @@ public class autenticacaoChavePrivada {
 							frame.repaint();
 
 							// Passa para a proxima etapa
+							usuario.incrementaAcessosUsuario();
 							MenuPrincipal.getInstance().iniciarMenuPrincipal(usuario);
 							return;
 						}
@@ -315,15 +316,17 @@ public class autenticacaoChavePrivada {
 		return assinatura;
 	}
 
-	private PublicKey obtemChavePublica(byte [] certificadoPEM){
+	public X509Certificate obtemCertificado(byte [] certificadoPEM){
 
-		PublicKey publicKey = null;
+		X509Certificate certificado = null;
 
 		try {
 			// correcao no arquivo...
-			String s1 = new String(certificadoPEM, "UTF8");
-			int index = s1.indexOf("-----BEGIN CERTIFICATE-----");
-			String certificadoPEM_B64String = s1.substring(index);
+			String certificadoPEM_B64String = new String(certificadoPEM, "UTF8");
+			int index = certificadoPEM_B64String.indexOf("-----BEGIN CERTIFICATE-----");
+			if (index != -1)
+				certificadoPEM_B64String = certificadoPEM_B64String.substring(index);
+
 
 			// remove headers do arquivo PEM
 			certificadoPEM_B64String = certificadoPEM_B64String.replace("-----BEGIN CERTIFICATE-----", "");
@@ -332,11 +335,7 @@ public class autenticacaoChavePrivada {
 			// Obtem certificado no formato x509
 			byte[] certificadoBytes = Base64.getMimeDecoder().decode(certificadoPEM_B64String);
 			CertificateFactory cf = CertificateFactory.getInstance("x509");			
-			X509Certificate certificado = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certificadoBytes));
-
-	  		publicKey = certificado.getPublicKey();
-	  		
-	  		System.out.println("Chave publica do usuario obtida com sucesso!");
+			certificado = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certificadoBytes));
 	  		
 		}
 		catch(Exception e) {
@@ -344,7 +343,7 @@ public class autenticacaoChavePrivada {
 			System.exit(1);
 		}
 		
-		return publicKey;
+		return certificado;
 		
 	}
 

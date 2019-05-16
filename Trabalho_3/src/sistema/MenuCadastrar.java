@@ -6,12 +6,16 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.security.Principal;
+import java.security.cert.X509Certificate;
 import java.util.Scanner;
 import javax.swing.*;
 import java.sql.*;
 
 import banco.*;
 import Interface.MenuFrame;
+import autenticacao.autenticacaoChavePrivada;
+import autenticacao.autenticacaoSenha;
 
 public class MenuCadastrar{
 	private static MenuCadastrar menuCadastrar = null;
@@ -161,36 +165,86 @@ public class MenuCadastrar{
 		voltar.setPreferredSize(new Dimension(850,60));
 		voltar.setFont(new Font("Verdana",1,20));
 		painel.add(voltar);
+
 		
-		/*
 		cadastrar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				try {
-					String insert = "INSERT INTO USUARIOS VALUES (?,?,?,?,?,?,?,?,?)";
-					PreparedStatement stmt = conn.prepareStatement(insert);
-					stmt.setString(1,this.login_name);
-					stmt.setString(2,this.nome);
-					stmt.setInt(3,this.grupo);
-					stmt.setString(4,this.salt);
-					stmt.setString(5,this.senhaHash);
-					stmt.setBytes(6,this.certificado);
-					stmt.setInt(7,this.bloqueado);
-					stmt.setInt(8,this.numero_acessos);
-					stmt.setInt(9,this.numero_consultas);
-					int res = stmt.executeUpdate();
 
-					if (stmt != null)
-		        		stmt.close();
+				// verifica senha e confirmação
+				String senha = new String(pw.getPassword());
+				String confirmaSenha = new String(cpw.getPassword());
+				
+
+				if (! senha.equals(confirmaSenha) ){
+					JOptionPane.showMessageDialog(frame, "As senhas devem ser iguais!");
+					return;
 				}
-				catch (SQLException e) {
-					System.err.println(e);
-					System.out.println("Erro ao atualizar usuario no banco de dados.");
-					System.exit(1);
+
+				if (! verificaFormatoSenha(senha) )
+					return;
+
+				// decodifica e abre certificado digital
+				byte [] certCodificado = Usuario.obtemCertificadoDigitalCodificado(certificado.getText());
+				X509Certificate certificadoX509 = autenticacaoChavePrivada.getInstance().obtemCertificado(certCodificado);
+				int grupo = (int) combo.getSelectedItem();
+
+				// obtem dados do certificado (parse)
+				Principal principalEmissor = certificadoX509.getIssuerDN();
+				Principal principalSujeito = certificadoX509.getSubjectDN();
+							
+				int indexCNEmissor = principalEmissor.getName().indexOf("CN=") + 3;
+				int indexCNSujeito = principalSujeito.getName().indexOf("CN=") + 3;
+				int indexEmailSujeito = principalSujeito.getName().indexOf("EMAILADDRESS=") + 13;
+				String nomeEmissor = principalEmissor.getName().substring(indexCNEmissor, principalEmissor.getName().indexOf(", ", indexCNEmissor));
+				String nomeSujeito = principalSujeito.getName().substring(indexCNSujeito, principalSujeito.getName().indexOf(", ", indexCNSujeito));
+				String emailSujeito = principalSujeito.getName().substring(indexEmailSujeito, principalSujeito.getName().indexOf(", ", indexEmailSujeito));
+				
+				// gera string com dados
+				String stringConfirmacao = "\t\tPorfavor, confirme os dados do usuário:\n\n"
+						+ "Grupo: "+grupo+"\n"
+						+ "Senha: "+senha+"\n"
+						+ "\n"
+								+ "\tCertificado Digital:\n\n"
+						+ "Versão: "+certificadoX509.getVersion()+"\n"
+						+ "Série: "+certificadoX509.getSerialNumber()+"\n"
+						+ "Validade Not Before: "+certificadoX509.getNotBefore()+"\n"
+						+ "Validade Not After: "+certificadoX509.getNotAfter()+"\n"
+						+ "Tipo de assinatura: "+certificadoX509.getSigAlgName()+"\n"
+						+ "Emissor: "+nomeEmissor+"\n"
+						+ "Sujeito: "+nomeSujeito+"\n"
+						+ "Email: "+emailSujeito+"\n\n\n";
+				
+				System.out.println(stringConfirmacao);
+
+				// abre OptionPane de confirmação
+				int resultadoConfirmacao = JOptionPane.showConfirmDialog (frame, stringConfirmacao, "Confirmar dados", JOptionPane.OK_CANCEL_OPTION);
+
+				// caso positivo, insere dados no banco
+				if (resultadoConfirmacao == JOptionPane.OK_OPTION) {
+
+					if (Usuario.verificaUsuarioExistente(emailSujeito)){
+						JOptionPane.showMessageDialog(frame, "Este email de usuário já existe!");
+						return;
+					}
+
+					String saltUsuario = autenticacaoSenha.geraSaltAleatorio();
+					Usuario novoUsuario = new Usuario(emailSujeito, nomeSujeito, grupo, saltUsuario, autenticacaoSenha.geraHashDaSenha(senha, saltUsuario), certCodificado, 0, 0, 0);
+		
+					if (novoUsuario.insereUsuario()) {
+						JOptionPane.showMessageDialog(frame, "Usuário inserido com sucesso!");
+
+						certificado.setText("");
+						pw.setText("");
+						cpw.setText("");
+						
+						return;
+
+					}
 				}
 				
 			}
 		});
-		*/
+		
 		
 		voltar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -205,4 +259,39 @@ public class MenuCadastrar{
 		frame.revalidate();
 		frame.repaint();
 	}
+
+
+	private boolean verificaFormatoSenha(String senha){
+
+		if (senha.length() < 6 || senha.length() > 8){
+			JOptionPane.showMessageDialog(frame, "A senha deve conter entre 6 e 8 dígitos!");
+			return false;
+		}
+		
+		for (int i=0; i<senha.length()-1; i++) {
+			
+			int dig = (int) senha.charAt(i);
+			int proximo_dig = (int) senha.charAt(i+1);
+
+			if( dig < 48 || dig > 57 ) {
+				JOptionPane.showMessageDialog(frame, "A senha deve conter somente dígitos numéricos!");
+				return false;
+			}
+			
+			if (dig == proximo_dig){
+				JOptionPane.showMessageDialog(frame, "A senha não pode conter repetições de números consecutivos!");
+				return false;
+			}
+			
+			if ((dig == proximo_dig+1) || (dig == proximo_dig-1)){
+				JOptionPane.showMessageDialog(frame, "A senha não pode conter sequências crescentes ou decrescentes de números!");
+				return false;
+			}		
+		}
+
+		
+		return true;
+	}
+
+
 }

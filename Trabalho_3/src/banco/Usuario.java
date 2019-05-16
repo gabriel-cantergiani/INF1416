@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.sql.*;
@@ -31,6 +32,7 @@ public class Usuario {
 	public int numero_acessos;
 	public int numero_consultas;
 	public PrivateKey chavePrivada;
+	public PublicKey chavePublica;
 	Connection conn;
 	
 
@@ -105,8 +107,10 @@ public class Usuario {
 		timer.schedule(block, 120000);
 	}
 
-	public void insereUsuario(){
+	public boolean insereUsuario(){
 
+		int res = 0;
+		
 		try {
 			String insert = "INSERT INTO USUARIOS VALUES (?,?,?,?,?,?,?,?,?)";
 			PreparedStatement stmt = conn.prepareStatement(insert);
@@ -119,7 +123,7 @@ public class Usuario {
 			stmt.setInt(7,this.bloqueado);
 			stmt.setInt(8,this.numero_acessos);
 			stmt.setInt(9,this.numero_consultas);
-			int res = stmt.executeUpdate();
+			res = stmt.executeUpdate();
 
 			if (stmt != null)
         		stmt.close();
@@ -131,24 +135,53 @@ public class Usuario {
 		}
 
 		System.out.println("Usuario inserido com sucesso!");
+		if(res == 1)
+			return true;
+		else
+			return false;
+
+	}
+
+	public static boolean verificaUsuarioExistente(String login_name) {
+
+		int res = 0;
+		Connection conn = conexaoBD.getInstance().getConnection();
+		
+		try {
+			String query = "SELECT * FROM USUARIOS WHERE LOGIN_NAME='"+login_name+"';";
+			Statement stmt = conn.createStatement();
+			ResultSet result = stmt.executeQuery(query);
+
+			if (!result.next())
+				res = 1;
+
+			if (stmt != null)
+        		stmt.close();
+		}
+		catch (SQLException e) {
+			System.err.println(e);
+			System.out.println("Erro ao atualizar usuario no banco de dados.");
+			System.exit(1);
+		}
+
+		if(res == 1)
+			return false;
+		else
+			return true;
 
 	}
 
 
 	//################################################### FUNCAO DE TESTE
-	private static byte [] obtemCertificadoDigitalCodificado(){
+	public static byte [] obtemCertificadoDigitalCodificado(String caminho){
 
 		Connection conn = conexaoBD.getInstance().getConnection();
 		
-		// Obtem caminho para arquivo da chave privada
-		Scanner scanner = new Scanner(System.in);
-		System.out.print("Digite o caminho para o arquivo contendo o certificado digital: ");
-		String caminhoChave = scanner.nextLine();
 		byte [] certificadoDigitalPEM = null;
 
 		// Abre arquivo com chave privada
 		try{
-			Path path = Paths.get(caminhoChave);
+			Path path = Paths.get(caminho);
 			certificadoDigitalPEM = Files.readAllBytes(path);
 		}
 		catch(IOException e){
@@ -165,7 +198,13 @@ public class Usuario {
 
 		Connection conn = conexaoBD.getInstance().getConnection();
 		
-		byte [] certificadoPEM = obtemCertificadoDigitalCodificado();
+
+		// Obtem caminho para arquivo do certificado
+		Scanner scanner = new Scanner(System.in);
+		System.out.print("Digite o caminho para o arquivo contendo o certificado digital: ");
+		String caminho = scanner.nextLine();
+
+		byte [] certificadoPEM = obtemCertificadoDigitalCodificado(caminho);
 		System.out.println(certificadoPEM);
 
 		try {
@@ -193,7 +232,12 @@ public class Usuario {
 
 		Connection conn = conexaoBD.getInstance().getConnection();
 		
-		byte [] certificadoPEM = obtemCertificadoDigitalCodificado();
+		// Obtem caminho para arquivo do certificado
+		Scanner scanner = new Scanner(System.in);
+		System.out.print("Digite o caminho para o arquivo contendo o certificado digital: ");
+		String caminho = scanner.nextLine();
+		
+		byte [] certificadoPEM = obtemCertificadoDigitalCodificado(caminho);
 
 		try {
 			String s1 = new String(certificadoPEM, "UTF8");
