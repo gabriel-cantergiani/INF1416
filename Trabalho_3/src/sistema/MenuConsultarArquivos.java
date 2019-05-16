@@ -158,7 +158,7 @@ public class MenuConsultarArquivos{
 				String arquivoIndex = "";
 				byte[] arquivoIndexBytes = null;
 				try {
-					// Decripta chave privada (codificada em B64) usando a chave simetrica gerada
+					// Decripta arquivoIndex usando a chave simetrica gerada
 					cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
 					cipher.init(Cipher.DECRYPT_MODE, chaveSimetrica);
 			    	arquivoIndexBytes = cipher.doFinal(cifraIndex);
@@ -168,22 +168,36 @@ public class MenuConsultarArquivos{
 					e1.printStackTrace();
 				}
 		    	
-				// decriptar assinatura com chave publica do user01 que ta no certificado
-				byte[] digestAssinatura = null;
+				// decriptar assinatura com chave publica do user01 que ta no certificado e obter digest original
+				String digestAssinatura = null;
 				try {
 					cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 					cipher.init(Cipher.DECRYPT_MODE, usuario.chavePublica);
-					digestAssinatura = cipher.doFinal(assinaturaIndex);
+					byte [] digestAssinaturaBytes = cipher.doFinal(assinaturaIndex);
+
+					StringBuilder sb = new StringBuilder();
+					for(byte b:digestAssinaturaBytes){
+		        		sb.append(String.format("%02X", b));	
+		        	}
+		        	digestAssinatura = sb.toString();
+
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
 				
-				// gerar digest do arquivoIndex
-				byte[] digestArquivo = null;
+				// gerar novo digest do arquivoIndex
+				String digestArquivo = null;
 				try {
 					MessageDigest md = MessageDigest.getInstance("MD5");
 					md.update(arquivoIndexBytes);
-					digestArquivo = md.digest();	
+					byte [] digestArquivoBytes = md.digest();
+
+					StringBuilder sb = new StringBuilder();
+					for(byte b:digestArquivoBytes){
+		        		sb.append(String.format("%02X", b));	
+		        	}
+		        	digestArquivo = sb.toString();
+
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
@@ -191,8 +205,14 @@ public class MenuConsultarArquivos{
 				// comparar digest do arquivo Index com digest obtido pela assinatura
 				System.out.println(digestAssinatura);
 				System.out.println(digestArquivo);
+				System.out.println(digestArquivo.equals(digestAssinatura));
 				
 				// se estiver okk, listar linhas do arquivoIndex
+				if (! digestArquivo.equals(digestAssinatura) ){
+					JOptionPane.showMessageDialog(frame, "Teste de integridade e autenticidade falhou! Você não têm permissão para acessar esta pasta de arquivos!");
+					return;
+				}
+
 				String linha1 = arquivoIndex.substring(0, arquivoIndex.indexOf("\n"));
 				String linha2 = arquivoIndex.substring(arquivoIndex.indexOf("\n"));
 				
