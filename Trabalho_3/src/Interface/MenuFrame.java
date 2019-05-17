@@ -19,7 +19,7 @@ public class MenuFrame extends JFrame{
 		Toolkit tk = Toolkit.getDefaultToolkit();
 		Dimension ss = tk.getScreenSize();
 
-		this.setBounds(ss.width/6, ss.height/6, 2*ss.width/3, 2*ss.height/3);
+		this.setBounds(ss.width/6, (10*ss.height - 7*ss.height)/20, 2*ss.width/3, 7*ss.height/10);
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		this.setVisible(true);
 		

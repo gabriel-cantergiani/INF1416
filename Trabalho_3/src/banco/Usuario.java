@@ -187,7 +187,7 @@ public class Usuario {
 		catch(IOException e){
 			System.err.println(e);
 			System.out.println("Erro ao abrir arquivo da chave privada");
-			System.exit(1);
+			return null;
 		}
 
 		return certificadoDigitalPEM;
@@ -329,6 +329,55 @@ public class Usuario {
 			System.out.println("Erro ao incrementar numero de consultas do usuário no banco de dados.");
 			System.exit(1);
 		}	
+
+	}
+
+	public static boolean alterarUsuario(String novo_login_name, String novo_nome, byte [] certificado, String salt, String senhaHash, String login_name){
+
+		Connection conn = conexaoBD.getInstance().getConnection();
+
+		try {
+			// variavel que conta numero de alteracoes(colunas que serao modificadas)
+			int i = 1;
+
+			String update = "UPDATE USUARIOS SET ";
+			if (certificado != null){
+				update += "LOGIN_NAME=?, NOME=?, CERTIFICADO_DIGITAL=? ";
+				i+=3;
+			}
+			if(salt != null){
+				if (i == 4) update += ", ";
+				update += "SALT=?, SENHA=? ";
+				i+=2;
+			}
+			update += " WHERE LOGIN_NAME=?;";
+			
+			PreparedStatement stmt = conn.prepareStatement(update);
+
+			if (certificado != null){
+				stmt.setString(1,novo_login_name);
+				stmt.setString(2,novo_nome);
+				stmt.setBytes(3,certificado);
+			}
+			if (salt != null){
+				stmt.setString(i-2,salt);
+				stmt.setString(i-1,senhaHash);	
+			}
+			stmt.setString(i,login_name);
+			
+			int res = stmt.executeUpdate();
+
+			System.out.println("Resultado: "+Integer.toString(res));
+
+			stmt.close();
+		}
+		catch (SQLException e) {
+			System.err.println(e);
+			System.out.println("Erro ao atualizar certificado no banco de dados.");
+			return false;
+		}
+
+		return true;
 
 	}
 

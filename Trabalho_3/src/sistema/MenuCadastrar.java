@@ -276,7 +276,7 @@ public class MenuCadastrar{
 	}
 
 
-	private boolean verificaFormatoSenha(String senha){
+	protected boolean verificaFormatoSenha(String senha){
 
 		if (senha.length() < 6 || senha.length() > 8){
 			JOptionPane.showMessageDialog(frame, "A senha deve conter entre 6 e 8 dígitos!");

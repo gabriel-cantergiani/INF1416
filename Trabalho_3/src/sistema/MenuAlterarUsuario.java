@@ -4,19 +4,20 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.security.Principal;
+import java.security.cert.X509Certificate;
 import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Scanner;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextArea;
 
 import Interface.MenuFrame;
+import autenticacao.*;
 import banco.*;
 
 public class MenuAlterarUsuario{
@@ -44,6 +45,10 @@ public class MenuAlterarUsuario{
 		/*FALTA
 		 	- botao alterar
 		*/
+
+		Registro registro = new Registro();
+		registro.login_name = usuario.login_name;
+		registro.insereRegistro(7001, "");
 		
 		System.out.println("");
 		System.out.println("#### MENU ALTERAR USUARIO ####");
@@ -123,7 +128,121 @@ public class MenuAlterarUsuario{
 		
 		alterar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				//mesmo que cadastrar em menucadastrar (checar)
+
+
+				// verifica senha e confirmação
+				String senha = new String(pw.getPassword());
+				String confirmaSenha = new String(cpw.getPassword());
+				
+				if (! senha.equals(confirmaSenha) ){
+					JOptionPane.showMessageDialog(frame, "As senhas devem ser iguais!");
+					
+					registro.login_name = usuario.login_name;
+					registro.insereRegistro(7002, "");
+
+					return;
+				}
+
+				if ( senha.length() > 0 && ! MenuCadastrar.getInstance().verificaFormatoSenha(senha) )
+					return;
+
+				String stringConfirmacao = "\t\tPorfavor, confirme os novos dados do usuário:\n\n"
+							+ "Senha: "+senha+"\n"
+							+ "\n";
+
+				byte [] certCodificado = null;
+				String emailSujeito = null;
+				String nomeSujeito = null;
+
+				// decodifica e abre certificado digital
+				if (! certificado.getText().equals("")) {
+					certCodificado = Usuario.obtemCertificadoDigitalCodificado(certificado.getText());
+					
+					if(certCodificado == null) {
+						JOptionPane.showMessageDialog(frame, "Erro ao abrir arquivo pelo caminho! Tente novamente.");
+						
+						registro.login_name = usuario.login_name;
+						registro.insereRegistro(7003, "");
+						return;
+					}
+
+					
+					X509Certificate certificadoX509 = autenticacaoChavePrivada.getInstance().obtemCertificado(certCodificado);
+					
+					if(certificadoX509 == null)
+						JOptionPane.showMessageDialog(frame, "Erro ao ler certificado! Tente novamente.");
+				
+
+					// obtem dados do certificado (parse)
+					Principal principalEmissor = certificadoX509.getIssuerDN();
+					Principal principalSujeito = certificadoX509.getSubjectDN();
+								
+					int indexCNEmissor = principalEmissor.getName().indexOf("CN=") + 3;
+					int indexCNSujeito = principalSujeito.getName().indexOf("CN=") + 3;
+					int indexEmailSujeito = principalSujeito.getName().indexOf("EMAILADDRESS=") + 13;
+					String nomeEmissor = principalEmissor.getName().substring(indexCNEmissor, principalEmissor.getName().indexOf(", ", indexCNEmissor));
+					nomeSujeito = principalSujeito.getName().substring(indexCNSujeito, principalSujeito.getName().indexOf(", ", indexCNSujeito));
+					emailSujeito = principalSujeito.getName().substring(indexEmailSujeito, principalSujeito.getName().indexOf(", ", indexEmailSujeito));
+					
+					// gera string com dados
+					
+					stringConfirmacao += "\tCertificado Digital:\n\n"
+							+ "Versão: "+certificadoX509.getVersion()+"\n"
+							+ "Série: "+certificadoX509.getSerialNumber()+"\n"
+							+ "Validade Not Before: "+certificadoX509.getNotBefore()+"\n"
+							+ "Validade Not After: "+certificadoX509.getNotAfter()+"\n"
+							+ "Tipo de assinatura: "+certificadoX509.getSigAlgName()+"\n"
+							+ "Emissor: "+nomeEmissor+"\n"
+							+ "Sujeito: "+nomeSujeito+"\n"
+							+ "Email: "+emailSujeito+"\n\n\n";
+					
+					System.out.println(stringConfirmacao);
+
+				}
+
+				// verifica se todos os campos ficaram em branco
+				if ( senha.length() < 1 && certCodificado == null )
+					return;
+
+				// abre OptionPane de confirmação
+				int resultadoConfirmacao = JOptionPane.showConfirmDialog (frame, stringConfirmacao, "Confirmar dados", JOptionPane.OK_CANCEL_OPTION);
+
+				// caso positivo, insere dados no banco
+				if (resultadoConfirmacao == JOptionPane.OK_OPTION) {
+
+					if ( !usuario.login_name.equals(emailSujeito) && Usuario.verificaUsuarioExistente(emailSujeito)){
+						JOptionPane.showMessageDialog(frame, "Este email de usuário já existe!");
+						return;
+					}
+
+					String salt = null;
+					String senhaHash = null;
+
+					if (senha.length() > 1){
+						salt = autenticacaoSenha.geraSaltAleatorio();
+						usuario.salt = salt;
+						senhaHash = autenticacaoSenha.geraHashDaSenha(senha, salt);
+						usuario.senhaHash = senhaHash;
+					}
+
+					if ( usuario.alterarUsuario(emailSujeito, nomeSujeito, certCodificado, salt, senhaHash , usuario.login_name) ) {
+						JOptionPane.showMessageDialog(frame, "Usuário alterado com sucesso!");
+
+						if (certCodificado != null){
+							usuario.login_name = emailSujeito;
+							usuario.nome = nomeSujeito;
+							usuario.certificado = certCodificado;
+						}
+						
+						certificado.setText("");
+						pw.setText("");
+						cpw.setText("");
+						
+						return;
+
+					}
+				}
+
 			}
 		});
 		
