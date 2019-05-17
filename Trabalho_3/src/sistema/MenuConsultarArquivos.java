@@ -4,7 +4,12 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,13 +30,14 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import javax.swing.SwingConstants;
 
 import Interface.MenuFrame;
 import banco.*;
 
 public class MenuConsultarArquivos{
 	private static MenuConsultarArquivos menuConsultarArquivos = null;
-	private Scanner scanner;
+	private MouseAdapter cliqueArquivo = null;
 	Connection conn;
 	MenuFrame frame;
 	
@@ -81,7 +87,7 @@ public class MenuConsultarArquivos{
 		painel.add(nome);
 		
 		JLabel numAcessos = new JLabel();
-		numAcessos.setText("Total de acessos do usuário: "+usuario.numero_acessos);
+		numAcessos.setText("Total de consultas do usuário: "+usuario.numero_consultas);
 		numAcessos.setFont(new Font("Verdana",1,30));
 		numAcessos.setPreferredSize(new Dimension(850,50));
 		painel.add(numAcessos);
@@ -108,116 +114,52 @@ public class MenuConsultarArquivos{
 		voltar.setPreferredSize(new Dimension(850,60));
 		voltar.setFont(new Font("Verdana",1,20));
 		painel.add(voltar);
+
 		
 		listar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				
-				byte [] envelopeIndex = null;
-				byte [] cifraIndex = null;
-				byte [] assinaturaIndex = null;
-				
-				// Abre arquivos de indice
-				try{
-					Path path = Paths.get(caminhoPasta.getText()+"\\index.env");
-					envelopeIndex = Files.readAllBytes(path);
-					path = Paths.get(caminhoPasta.getText()+"\\index.enc");
-					cifraIndex = Files.readAllBytes(path);
-					path = Paths.get(caminhoPasta.getText()+"\\index.asd");
-					assinaturaIndex = Files.readAllBytes(path);
+								
+				// DECRIPTA INDEX
+				String arquivoIndex;
+				try {
+					arquivoIndex = new String (decriptaArquivo(caminhoPasta.getText()+"\\index", usuario), "UTF8" );
 				}
-				catch(IOException IOe){
-					System.err.println(IOe);
-					JOptionPane.showMessageDialog(frame, "Erro ao abrir pasta fornecida!");
+				catch (Exception ex) {
+					JOptionPane.showMessageDialog(frame, "Erro ao abrir e/ou decriptar pasta fornecida!");
 					return;
 				}
-				
-				// decripta envelope digital
-				Cipher cipher;
-				byte [] semente = null;
-				System.out.println("OK1");
-				try {
-					cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-					cipher.init(Cipher.DECRYPT_MODE, usuario.chavePrivada);
-					semente = cipher.doFinal(envelopeIndex);
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}
-				
-				// Inicializa o gerador PRNG com a frase secreta (semente)
-				Key chaveSimetrica = null;
-				System.out.println("OK2");
-				try {
-					SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
-					secureRandom.setSeed(semente);
-					// Gera a chave simetrica apartir do gerador inicializado anteriormente
-					KeyGenerator keyGen = KeyGenerator.getInstance("DES");
-					keyGen.init(56, secureRandom);
-					chaveSimetrica = keyGen.generateKey();
 					
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}
-				System.out.println("OK3");
-				String arquivoIndex = "";
-				byte[] arquivoIndexBytes = null;
-				try {
-					// Decripta arquivoIndex usando a chave simetrica gerada
-					cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
-					cipher.init(Cipher.DECRYPT_MODE, chaveSimetrica);
-			    	arquivoIndexBytes = cipher.doFinal(cifraIndex);
-					arquivoIndex = new String(arquivoIndexBytes, "UTF8");
-					System.out.println( arquivoIndex );
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}
-				System.out.println("OK4");
-				// decriptar assinatura com chave publica do user01 que ta no certificado e obter digest original
-				
-				try {
-					Signature sig = Signature.getInstance("MD5withRSA");
-					sig.initVerify(usuario.chavePublica);
-					sig.update(arquivoIndexBytes);
-					
-					if (sig.verify(assinaturaIndex)) {
-						JOptionPane.showMessageDialog(frame, "Teste de integridade e autenticidade falhou! Você não têm permissão para acessar esta pasta de arquivos!");
-						return;
-					}
-					
-					System.out.println("Assinatura verificada! Arquivo decriptado corretamente!");
-
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}
-
-				System.out.println(arquivoIndex);
-				String linha1 = arquivoIndex.substring(0, arquivoIndex.indexOf("\n"));
-				String linha2 = arquivoIndex.substring(arquivoIndex.indexOf("\n"));
+				if (arquivoIndex == null)
+					return;
 				
 				painel.remove(caminho);
 				painel.remove(caminhoPasta);
 				painel.remove(listar);
 				painel.remove(voltar);
-				
-				JLabel arqlinha1 = new JLabel();
-				arqlinha1.setText(linha1);
-				arqlinha1.setFont(new Font("Verdana",1,20));
-				arqlinha1.setPreferredSize(new Dimension(850,40));
-				painel.add(arqlinha1);
-				
-				JLabel arqlinha2 = new JLabel();
-				arqlinha2.setText(linha2);
-				arqlinha2.setFont(new Font("Verdana",1,20));
-				arqlinha2.setPreferredSize(new Dimension(850,40));
-				painel.add(arqlinha2);
-				
+
+				String linha = "";
+				int inicioLinha = 0;
+				int fimLinha = arquivoIndex.length()-1;
+
+				while (arquivoIndex.indexOf("\n", inicioLinha) != -1){
+					fimLinha = arquivoIndex.indexOf("\n", inicioLinha);
+					linha = arquivoIndex.substring(inicioLinha, fimLinha);
+					inicioLinha = fimLinha + 1;
+
+					JLabel arquivo = new JLabel(linha, SwingConstants.CENTER);
+					arquivo.setFont(new Font("Verdana",1,20));
+					arquivo.setPreferredSize(new Dimension(850,40));
+					arquivo.addMouseListener(cliqueArquivo);
+					painel.add(arquivo);
+				}
+
 				painel.add(voltar);
+
+				usuario.incrementaConsultasUsuario();
+				numAcessos.setText("Total de consultas do usuário: "+usuario.numero_consultas);
 				
 				frame.revalidate();
 				frame.repaint();
-				
-				// quando clicar em uma linha, decriptar envelope, arquivo e assinatura, verificar integridade e controle de acesso
-				
-				// caso positivo, guardar arquivo decriptado em novo arquivo
 				
 			}
 		});
@@ -231,9 +173,142 @@ public class MenuConsultarArquivos{
 			}
 		});
 		
+		cliqueArquivo = new MouseAdapter() {
+
+			@Override
+			public void mouseClicked(MouseEvent event) {
+
+				JLabel label = (JLabel) event.getSource();
+				String [] linhaArquivo = label.getText().split(" "); 
+
+				String nomeCodigo = linhaArquivo[0];
+				String nomeSecreto = linhaArquivo[1];
+				String donoArquivo = linhaArquivo[2];
+				int grupoArquivo;
+
+				if ( linhaArquivo[3].equals("usuario") )
+					grupoArquivo = 2;
+				else
+					grupoArquivo = 1;
+
+				if ( !donoArquivo.equals(usuario.login_name) && (grupoArquivo != usuario.grupo)){
+					JOptionPane.showMessageDialog(frame, "Você não tem permissão para acessar este arquivo!");
+					return;	
+				}
+
+				byte [] conteudoArquivo = decriptaArquivo(caminhoPasta.getText()+"\\"+nomeCodigo, usuario);
+
+				if(conteudoArquivo == null)
+					return;
+				
+				try (FileOutputStream stream = new FileOutputStream(caminhoPasta.getText()+"\\"+nomeSecreto)) {
+				    stream.write(conteudoArquivo);
+				}
+				catch(Exception e){
+					JOptionPane.showMessageDialog(frame, "Erro ao escrever conteudo do arquivo");
+					return;
+				}
+
+				JOptionPane.showMessageDialog(frame, "Arquivo decriptado com sucesso!");
+				return;
+
+			}
+		};
+
 		frame.getContentPane().add(painel);
 		frame.revalidate();
 		frame.repaint();
 
 	}
+
+
+
+	private byte [] decriptaArquivo(String caminho,Usuario usuario){
+
+		byte [] envelope = null;
+		byte [] arquivoCifrado = null;
+		byte [] assinatura = null;
+		byte[] arquivoBytes = null;
+
+		// Abre arquivos de indice
+		try{
+			Path path = Paths.get(caminho+".env");
+			envelope = Files.readAllBytes(path);
+			path = Paths.get(caminho+".enc");
+			arquivoCifrado = Files.readAllBytes(path);
+			path = Paths.get(caminho+".asd");
+			assinatura = Files.readAllBytes(path);
+		}
+		catch(IOException IOe){
+			System.err.println(IOe);
+			JOptionPane.showMessageDialog(frame, "Erro ao abrir pasta fornecida!");
+			return null;
+		}
+		
+		// decripta envelope digital
+		Cipher cipher;
+		byte [] semente = null;
+		try {
+			cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+			cipher.init(Cipher.DECRYPT_MODE, usuario.chavePrivada);
+			semente = cipher.doFinal(envelope);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			JOptionPane.showMessageDialog(frame, "A chave privada fornecida não é válida para decriptar este arquivo.");
+			return null;
+		}
+		
+		// Inicializa o gerador PRNG com a frase secreta (semente)
+		Key chaveSimetrica = null;
+
+		try {
+			SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
+			secureRandom.setSeed(semente);
+			// Gera a chave simetrica apartir do gerador inicializado anteriormente
+			KeyGenerator keyGen = KeyGenerator.getInstance("DES");
+			keyGen.init(56, secureRandom);
+			chaveSimetrica = keyGen.generateKey();
+			
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			JOptionPane.showMessageDialog(frame, "Envelope digital inválido.");
+			return null;
+		}
+
+		try {
+			// Decripta arquivoIndex usando a chave simetrica gerada
+			cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
+			cipher.init(Cipher.DECRYPT_MODE, chaveSimetrica);
+	    	arquivoBytes = cipher.doFinal(arquivoCifrado);
+	    	
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			JOptionPane.showMessageDialog(frame, "Envelope digital inválido. Não foi possível decriptar o arquivo.");
+			return null;
+		}
+
+		// decriptar assinatura com chave publica do user01 que ta no certificado e obter digest original
+		
+		try {
+			Signature sig = Signature.getInstance("MD5withRSA");
+			sig.initVerify(usuario.chavePublica);
+			sig.update(arquivoBytes);
+			
+			if (! sig.verify(assinatura)) {
+				JOptionPane.showMessageDialog(frame, "Teste de integridade e autenticidade falhou! Você não têm permissão para acessar esta pasta de arquivos!");
+				return null;
+			}
+			
+			System.out.println("Assinatura verificada! Arquivo decriptado corretamente!");
+
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			JOptionPane.showMessageDialog(frame, "Assinatura digital inválida.");
+			return null;
+		}
+
+		return arquivoBytes;
+
+	}
+
 }
