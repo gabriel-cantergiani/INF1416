@@ -2,24 +2,20 @@ package autenticacao;
 
 import java.security.MessageDigest;
 import java.sql.*;
-import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
 import banco.*;
-import sistema.MenuPrincipal;
 import Interface.MenuFrame;
 
 public class autenticacaoSenha {
 	
 	private static autenticacaoSenha authSenha = null;
-	private Connection conn;
+	Connection conn;
 	MenuFrame frame;
 	JPanel painel;
 	int tentativas;
@@ -37,6 +33,10 @@ public class autenticacaoSenha {
 	}
 
 	protected void iniciarAutenticacaoSenha(Usuario usuario) {
+		
+		Registro registro = new Registro();
+		registro.login_name = usuario.login_name;
+		registro.insereRegistro(3001, "");
 
 		/* FALTA:
 				- Criar interface com teclado virtual para receber (pares de) digitos da senha.
@@ -96,11 +96,16 @@ public class autenticacaoSenha {
 				if (verificaSenha(senha, usuario.senhaHash, usuario.salt)){
 					/* PASSA PARA PROXIMA ETAPA */
 					tentativas = 0;
+					registro.login_name = usuario.login_name;
+					registro.insereRegistro(3003, "");
 					
 					// Remove painel atual
 					frame.remove(painel);
 					frame.revalidate();
 					frame.repaint();
+					
+					registro.login_name = usuario.login_name;
+					registro.insereRegistro(3002, "");
 					
 					autenticacaoChavePrivada.getInstance().iniciarAutenticacaoChavePrivada(usuario);
 					
@@ -108,14 +113,32 @@ public class autenticacaoSenha {
 				}
 				else{
 					tentativas += 1;
+					
+					if(tentativas == 1) {
+						registro.login_name = usuario.login_name;
+						registro.insereRegistro(3004, "");
+					}
+					
+					else if(tentativas == 2) {
+						registro.login_name = usuario.login_name;
+						registro.insereRegistro(3005, "");
+					}
 
-					if (tentativas == 3){
+					else if(tentativas == 3){
+						
+						registro.login_name = usuario.login_name;
+						registro.insereRegistro(3006, "");
+						
 						usuario.bloqueiaUsuario();
 						JOptionPane.showMessageDialog(frame, "Número de tentativas excedido! Usuário bloqueado por 2 minutos.");
 						// Remove painel atual
 						frame.remove(painel);
 						frame.revalidate();
 						frame.repaint();
+						
+						registro.login_name = usuario.login_name;
+						registro.insereRegistro(3007, "");
+						
 						identificacaoUsuario.getInstance().iniciarIdentificacao();
 						return;
 					}
