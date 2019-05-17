@@ -6,6 +6,11 @@ import java.sql.SQLException;
 import java.sql.Date;
 
 public class Registro {
+	
+	/* FALTA
+		- mostrar erro ao inves do programar crashar qndo dois usuarios inserirem no mesmo momento = primary key (codigo, timestamp)
+	 */
+	
 	Connection conn;
 	public String login_name;
 	
@@ -13,14 +18,14 @@ public class Registro {
 		conn = conexaoBD.getInstance().getConnection();
 	}
 	
-	public void insereRegistro(int codigo) {		
+	public void insereRegistro(int codigo, String nome_arquivo) {		
 		try {
 			String insert = "INSERT INTO REGISTROS VALUES (?,?,?,?)";
 			PreparedStatement stmt = conn.prepareStatement(insert);
 			stmt.setInt(1,codigo);
 			stmt.setDate(2, new Date(System.currentTimeMillis()));
 			stmt.setString(3, login_name);
-			stmt.setString(4,"");
+			stmt.setString(4, nome_arquivo);
 			
 			stmt.execute();
 

@@ -1,7 +1,6 @@
 package autenticacao;
 
 import java.sql.*;
-import java.util.Scanner;
 import java.util.regex.Matcher; 
 import java.util.regex.Pattern;
 import javax.swing.*;
@@ -10,7 +9,6 @@ import java.awt.event.*;
 
 import Interface.MenuFrame;
 import banco.*;
-import sistema.MenuPrincipal;
 
 public class identificacaoUsuario{
 	private static identificacaoUsuario identificacao_usuario = null;
@@ -30,7 +28,10 @@ public class identificacaoUsuario{
 	}
 	
 	public void iniciarIdentificacao() {
-
+		
+		Registro registro = new Registro();
+		registro.login_name = "";
+		registro.insereRegistro(2001, "");
 		
 		/* Conexao com o banco de dados */
 		System.out.println("#### IDENTIFICACAO DO USUARIO - 1a ETAPA ####");
@@ -78,15 +79,23 @@ public class identificacaoUsuario{
 					Statement stmt = conn.createStatement();
 					result = stmt.executeQuery(query);
 
-					if (!result.next())
+					if (!result.next()) {
 						JOptionPane.showMessageDialog(frame, "Usuário não encontrado!");
+						registro.login_name = login_name;
+						registro.insereRegistro(2005, "");
+					}
 
-					else if (result.getInt("BLOQUEADO") == 1)
+					else if (result.getInt("BLOQUEADO") == 1) {
 						JOptionPane.showMessageDialog(frame, "Este usuário está temporariamente bloqueado (2 minutos) !");
+						registro.login_name = login_name;
+						registro.insereRegistro(2004, "");
+					}
 
 					else{
 
 						Usuario usuario = new Usuario(result.getString("LOGIN_NAME"), result.getString("NOME"), result.getInt("GRUPO"), result.getString("SALT"), result.getString("SENHA"), result.getBytes("CERTIFICADO_DIGITAL"), result.getInt("BLOQUEADO"), result.getInt("NUMERO_ACESSOS"), result.getInt("NUMERO_CONSULTAS"));
+						
+						frame.usuario = usuario.login_name;
 						
 						/* Fecha statement para passar para 2 etapa */
 						stmt.close();
@@ -96,6 +105,12 @@ public class identificacaoUsuario{
 						frame.remove(painel);
 						frame.revalidate();
 						frame.repaint();
+						
+						registro.login_name = usuario.login_name;
+						registro.insereRegistro(2003, "");
+						
+						registro.login_name = usuario.login_name;
+						registro.insereRegistro(2002, "");
 						
 						/* PASSANDO PARA PROXIMA ETAPA DE AUTENTICACAO */
 						autenticacaoSenha.getInstance().iniciarAutenticacaoSenha(usuario);

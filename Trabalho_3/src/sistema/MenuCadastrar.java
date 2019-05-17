@@ -1,14 +1,12 @@
 package sistema;
 
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.nio.file.NoSuchFileException;
 import java.security.Principal;
 import java.security.cert.X509Certificate;
-import java.util.Scanner;
 import javax.swing.*;
 import java.sql.*;
 
@@ -19,7 +17,6 @@ import autenticacao.autenticacaoSenha;
 
 public class MenuCadastrar{
 	private static MenuCadastrar menuCadastrar = null;
-	private Scanner scanner;
 	Connection conn;
 	MenuFrame frame;
 
@@ -38,9 +35,12 @@ public class MenuCadastrar{
 	protected void iniciarMenuCadastrar(Usuario usuario){		
 		JPanel painel = new JPanel();
 		
+		Registro registro = new Registro();
+		registro.login_name = usuario.login_name;
+		registro.insereRegistro(6001, "");
+		
 		/*FALTA
 			- limitar senha pra no max 9
-			- botao cadastrar funcionando
 		*/
 		
 		System.out.println("");
@@ -169,14 +169,20 @@ public class MenuCadastrar{
 		
 		cadastrar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				
+				registro.login_name = usuario.login_name;
+				registro.insereRegistro(6002, "");
 
 				// verifica senha e confirmação
 				String senha = new String(pw.getPassword());
 				String confirmaSenha = new String(cpw.getPassword());
 				
-
 				if (! senha.equals(confirmaSenha) ){
 					JOptionPane.showMessageDialog(frame, "As senhas devem ser iguais!");
+					
+					registro.login_name = usuario.login_name;
+					registro.insereRegistro(6003, "");
+
 					return;
 				}
 
@@ -185,7 +191,16 @@ public class MenuCadastrar{
 
 				// decodifica e abre certificado digital
 				byte [] certCodificado = Usuario.obtemCertificadoDigitalCodificado(certificado.getText());
+				
 				X509Certificate certificadoX509 = autenticacaoChavePrivada.getInstance().obtemCertificado(certCodificado);
+				
+				if(certificadoX509 == null) {
+					JOptionPane.showMessageDialog(frame, "Erro ao abrir arquivo pelo caminho! Tente novamente.");
+					
+					registro.login_name = usuario.login_name;
+					registro.insereRegistro(6004, "");
+				}
+				
 				int grupo = (int) combo.getSelectedItem();
 
 				// obtem dados do certificado (parse)

@@ -37,7 +37,7 @@ public class autenticacaoChavePrivada {
 	private Scanner scanner;
 	private Signature signature;
 	private byte[] arrayAleatorio;
-	private Connection conn;
+	Connection conn;
 	private MenuFrame frame;
 	private JPanel painel;
 	int tentativas;
@@ -66,11 +66,15 @@ public class autenticacaoChavePrivada {
 
 
 	public void iniciarAutenticacaoChavePrivada(Usuario usuario) {
+		Registro registro = new Registro();
+		registro.login_name = usuario.login_name;
+		registro.insereRegistro(4001, "");
 
 		/*FALTA
 				- Abrir filechooser para selecionar arquivo .pem com a chave criptografada e codificada em b64
 				- Criar interface
 				- Se verificacao for positiva, segue para o sistema
+				- quais registros precisam de quais arquivos
 
 		*/
 		System.out.println("");
@@ -105,10 +109,11 @@ public class autenticacaoChavePrivada {
 		cliqueBuscaChave = new ActionListener() {
 
 			public void actionPerformed(ActionEvent event){
+				Path path = null;
 
 				// OBTEM CHAVE PRIVADA CIFRADA
 				try{
-					Path path = Paths.get(input.getText());
+					path = Paths.get(input.getText());
 					chavePrivadaCifrada = Files.readAllBytes(path);
 				}
 				catch(IOException e){
@@ -116,6 +121,10 @@ public class autenticacaoChavePrivada {
 					System.out.println("Erro ao abrir arquivo da chave privada");
 					
 					JOptionPane.showMessageDialog(frame, "Erro ao abrir arquivo! Tente novamente.");
+					
+					registro.login_name = usuario.login_name;
+					registro.insereRegistro(4004, path.toString());
+					
 					return;				
 				}
 
@@ -160,6 +169,10 @@ public class autenticacaoChavePrivada {
 						// VERIFICA ASSINATURA
 						if(verificaAssinatura(assinatura, publicKey)){
 							JOptionPane.showMessageDialog(frame, "Chave privada autenticada com sucesso! Acesso concedido!");
+							
+							registro.login_name = usuario.login_name;
+							registro.insereRegistro(4003, "");
+							
 							tentativas = 0;
 
 							// Remove painel atual
@@ -168,6 +181,10 @@ public class autenticacaoChavePrivada {
 							frame.repaint();
 
 							// Passa para a proxima etapa
+							
+							registro.login_name = usuario.login_name;
+							registro.insereRegistro(4002, "");
+							
 							usuario.incrementaAcessosUsuario();
 							MenuPrincipal.getInstance().iniciarMenuPrincipal(usuario);
 							return;
@@ -175,18 +192,28 @@ public class autenticacaoChavePrivada {
 						else {
 							tentativas += 1;
 							msg = "Chave privada inválida!";
+							
+							registro.login_name = usuario.login_name;
+							registro.insereRegistro(4006, "");
 						}
 						
 					}
 					else {
 						tentativas += 1;
 						msg = "Frase secreta incorreta!";
+						
+						registro.login_name = usuario.login_name;
+						registro.insereRegistro(4005, "");
 					}
 
 
 					if (tentativas == 3){
 						usuario.bloqueiaUsuario();
 						JOptionPane.showMessageDialog(frame, msg+" Número de tentativas excedido! Usuário bloqueado por 2 minutos.");
+						
+						registro.login_name = usuario.login_name;
+						registro.insereRegistro(4007, "");
+						
 						// Remove painel atual
 						frame.remove(painel);
 						frame.revalidate();
@@ -342,7 +369,8 @@ public class autenticacaoChavePrivada {
 		}
 		catch(Exception e) {
 			System.err.println(e);
-			System.exit(1);
+			System.out.println("AQUI?????????????????????");
+			return null;
 		}
 		
 		return certificado;

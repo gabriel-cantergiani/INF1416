@@ -3,7 +3,6 @@ package sistema;
 import javax.swing.*;
 import java.awt.*;
 import java.sql.Connection;
-import java.util.Scanner;
 import java.awt.event.*;
 
 import banco.*;
@@ -11,7 +10,6 @@ import Interface.MenuFrame;
 
 public class MenuPrincipal{
 	private static MenuPrincipal menuPrincipal = null;
-	private Scanner scanner;
 	Connection conn;
 	MenuFrame frame;
 
@@ -29,11 +27,13 @@ public class MenuPrincipal{
 	
 	public void iniciarMenuPrincipal(Usuario usuario){
 		JPanel painel = new JPanel();
+		
+		Registro registro = new Registro();
+		registro.login_name = usuario.login_name;
+		registro.insereRegistro(5001, "");
 
 		/*FALTA
 		 	- while????
-			- versao de usuario comum
-			- melhorar o layout (tamanho)
 		*/
 		
 		System.out.println("");
@@ -81,6 +81,9 @@ public class MenuPrincipal{
 			
 			cadastro.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
+					registro.login_name = usuario.login_name;
+					registro.insereRegistro(5002, "");
+					
 					frame.remove(painel);
 					frame.revalidate();
 					frame.repaint();
@@ -106,6 +109,9 @@ public class MenuPrincipal{
 	
 		alterarUsuario.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				registro.login_name = usuario.login_name;
+				registro.insereRegistro(5003, "");
+				
 				frame.remove(painel);
 				frame.revalidate();
 				frame.repaint();
@@ -115,6 +121,10 @@ public class MenuPrincipal{
 		
 		consultarArquivos.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				registro.login_name = usuario.login_name;
+				registro.insereRegistro(5004, "");
+				
+				
 				frame.remove(painel);
 				frame.revalidate();
 				frame.repaint();
@@ -124,6 +134,9 @@ public class MenuPrincipal{
 		
 		saida.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				registro.login_name = usuario.login_name;
+				registro.insereRegistro(5005, "");
+				
 				frame.remove(painel);
 				frame.revalidate();
 				frame.repaint();
