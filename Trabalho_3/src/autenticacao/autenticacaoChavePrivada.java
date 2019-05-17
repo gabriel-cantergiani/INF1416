@@ -87,10 +87,10 @@ public class autenticacaoChavePrivada {
 		int larguraFrame = frame.getWidth();
 		int alturaFrame = frame.getHeight();
 		
-		JLabel label = new JLabel();
-		label.setText("Caminho do arquivo contendo a chave privada:");
+		JLabel label = new JLabel("Caminho do arquivo contendo a chave privada:", SwingConstants.CENTER);
 		label.setFont(new Font("Verdana",1,larguraFrame/40));
 		label.setBounds(frame.getWidth()/2 - 350, alturaFrame/10, 700, 80);
+		label.setBounds((10*larguraFrame - 8*larguraFrame)/20, alturaFrame/10, 8*larguraFrame/10, 80);
 		painel.add(label);
 
 		JTextArea input = new JTextArea(4,10);
@@ -130,7 +130,6 @@ public class autenticacaoChavePrivada {
 
 				JOptionPane.showMessageDialog(frame, "Arquivo aberto com sucesso!");
 				label.setText("Digita a frase secreta de decriptação:");
-				label.setBounds(larguraFrame/2 - 225, alturaFrame/10, 550, 80);
 				input.setText("");
 				input.setBounds((10*larguraFrame - 6*larguraFrame)/20, label.getY()+100, 6*larguraFrame/10, 60);
 				botao.setText("Decriptar");
@@ -223,7 +222,6 @@ public class autenticacaoChavePrivada {
 					}
 
 					label.setText("Caminho do arquivo contendo a chave privada:");
-					label.setBounds(frame.getWidth()/2 - 350, alturaFrame/10, 700, 80);
 					input.setText("");
 					input.setBounds((10*larguraFrame - 8*larguraFrame)/20, label.getY()+100, 8*larguraFrame/10, 3*alturaFrame/10);
 					botao.setText("Buscar");

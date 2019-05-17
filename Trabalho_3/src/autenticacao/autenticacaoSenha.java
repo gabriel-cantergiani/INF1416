@@ -57,10 +57,10 @@ public class autenticacaoSenha {
 		/* Array que guarda a senha (em pares) */
 		List<int[]> senha = new ArrayList<>();
 		
-		JLabel labelLogin = new JLabel();
-		labelLogin.setText("Senha de 6 a 8 dÌgitos:");
+		JLabel labelLogin = new JLabel("Senha de 6 a 8 d√≠gitos:", SwingConstants.CENTER);
 		labelLogin.setFont(new Font("Verdana",1,larguraFrame/40));
 		labelLogin.setBounds(larguraFrame/2 - 165, alturaFrame/10, 330, 80);
+		labelLogin.setBounds((10*larguraFrame - 8*larguraFrame)/20, alturaFrame/10, 8*larguraFrame/10, 80);
 		painel.add(labelLogin);
 
 		/* Lista de botoes do teclado */
@@ -71,7 +71,7 @@ public class autenticacaoSenha {
 			public void actionPerformed(ActionEvent e){
 
 				if (senha.size() >= 8){
-					JOptionPane.showMessageDialog(frame, "A senha deve conter no m·ximo 8 dÌgitos!");
+					JOptionPane.showMessageDialog(frame, "A senha deve conter no m√°ximo 8 d√≠gitos!");
 					return;
 				}
 
@@ -89,7 +89,7 @@ public class autenticacaoSenha {
 			public void actionPerformed(ActionEvent e){
 
 				if (senha.size() < 6){
-					JOptionPane.showMessageDialog(frame, "A senha deve conter no mÌnimo 6 dÌgitos!");
+					JOptionPane.showMessageDialog(frame, "A senha deve conter no m√≠nimo 6 d√≠gitos!");
 					return;
 				}
 
@@ -130,7 +130,7 @@ public class autenticacaoSenha {
 						registro.insereRegistro(3006, "");
 						
 						usuario.bloqueiaUsuario();
-						JOptionPane.showMessageDialog(frame, "N˙mero de tentativas excedido! Usu·rio bloqueado por 2 minutos.");
+						JOptionPane.showMessageDialog(frame, "N√∫mero de tentativas excedido! Usu√°rio bloqueado por 2 minutos.");
 						// Remove painel atual
 						frame.remove(painel);
 						frame.revalidate();
@@ -144,7 +144,7 @@ public class autenticacaoSenha {
 					}
 
 					senha.clear();
-					JOptionPane.showMessageDialog(frame, "Senha incorreta! VocÍ tem mais "+(3-tentativas)+" tentativa(s).");
+					JOptionPane.showMessageDialog(frame, "Senha incorreta! Voc√™ tem mais "+(3-tentativas)+" tentativa(s).");
 					atualizaBotoes(botoes);
 				}
 
