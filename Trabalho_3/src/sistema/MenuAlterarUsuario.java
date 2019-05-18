@@ -7,7 +7,6 @@ import java.awt.event.ActionListener;
 import java.security.Principal;
 import java.security.cert.X509Certificate;
 import java.sql.Connection;
-import java.util.Scanner;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -22,7 +21,6 @@ import banco.*;
 
 public class MenuAlterarUsuario{
 	private static MenuAlterarUsuario menuAlterarUsuario = null;
-	private Scanner scanner;
 	Connection conn;
 	MenuFrame frame;
 
@@ -128,8 +126,6 @@ public class MenuAlterarUsuario{
 		
 		alterar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-
-
 				// verifica senha e confirmação
 				String senha = new String(pw.getPassword());
 				String confirmaSenha = new String(cpw.getPassword());
@@ -138,7 +134,7 @@ public class MenuAlterarUsuario{
 					JOptionPane.showMessageDialog(frame, "As senhas devem ser iguais!");
 					
 					registro.login_name = usuario.login_name;
-					registro.insereRegistro(7002, "");
+					registro.insereRegistro(7002, certificado.getText());
 
 					return;
 				}
@@ -162,10 +158,9 @@ public class MenuAlterarUsuario{
 						JOptionPane.showMessageDialog(frame, "Erro ao abrir arquivo pelo caminho! Tente novamente.");
 						
 						registro.login_name = usuario.login_name;
-						registro.insereRegistro(7003, "");
+						registro.insereRegistro(7003, certificado.getText());
 						return;
 					}
-
 					
 					X509Certificate certificadoX509 = autenticacaoChavePrivada.getInstance().obtemCertificado(certCodificado);
 					
@@ -209,6 +204,8 @@ public class MenuAlterarUsuario{
 
 				// caso positivo, insere dados no banco
 				if (resultadoConfirmacao == JOptionPane.OK_OPTION) {
+					registro.login_name = usuario.login_name;
+					registro.insereRegistro(7004, certificado.getText());
 
 					if ( !usuario.login_name.equals(emailSujeito) && Usuario.verificaUsuarioExistente(emailSujeito)){
 						JOptionPane.showMessageDialog(frame, "Este email de usuário já existe!");
@@ -242,12 +239,19 @@ public class MenuAlterarUsuario{
 
 					}
 				}
+				else {
+					registro.login_name = usuario.login_name;
+					registro.insereRegistro(7005, certificado.getText());
+				}
 
 			}
 		});
 		
 		voltar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				registro.login_name = usuario.login_name;
+				registro.insereRegistro(7006, certificado.getText());
+				
 				frame.remove(painel);
 				frame.revalidate();
 				frame.repaint();

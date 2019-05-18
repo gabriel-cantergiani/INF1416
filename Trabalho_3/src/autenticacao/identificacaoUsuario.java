@@ -40,7 +40,7 @@ public class identificacaoUsuario{
 		painel.setLayout(null);
 		int larguraFrame = frame.getWidth();
 		
-		JLabel labelLogin = new JLabel("Digite o login_name do usuário:", SwingConstants.CENTER);
+		JLabel labelLogin = new JLabel("Digite o login_name do usuario:", SwingConstants.CENTER);
 		labelLogin.setFont(new Font("Verdana",1,larguraFrame/40));
 		labelLogin.setBounds(larguraFrame/2 - 225, 150, 450, 80);
 		labelLogin.setBounds((10*larguraFrame - 8*larguraFrame)/20, 150, 8*larguraFrame/10, 80);
@@ -80,13 +80,13 @@ public class identificacaoUsuario{
 					result = stmt.executeQuery(query);
 
 					if (!result.next()) {
-						JOptionPane.showMessageDialog(frame, "Usuário não encontrado!");
+						JOptionPane.showMessageDialog(frame, "Usuario nao encontrado!");
 						registro.login_name = login_name;
 						registro.insereRegistro(2005, "");
 					}
 
 					else if (result.getInt("BLOQUEADO") == 1) {
-						JOptionPane.showMessageDialog(frame, "Este usuário está temporariamente bloqueado (2 minutos) !");
+						JOptionPane.showMessageDialog(frame, "Este usuario esta temporariamente bloqueado (2 minutos) !");
 						registro.login_name = login_name;
 						registro.insereRegistro(2004, "");
 					}
@@ -121,7 +121,7 @@ public class identificacaoUsuario{
 				}
 				catch (SQLException e) {
 					System.err.println(e);
-					System.out.println("Erro ao buscar usuário no banco de dados.");
+					System.out.println("Erro ao buscar usuario no banco de dados.");
 					System.exit(1);
 				}			
 

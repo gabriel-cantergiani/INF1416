@@ -5,7 +5,6 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
-import java.util.Scanner;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -16,7 +15,6 @@ import banco.*;
 
 public class MenuSaida{
 	private static MenuSaida menuSaida = null;
-	private Scanner scanner;
 	Connection conn;
 	MenuFrame frame;
 
@@ -35,6 +33,10 @@ public class MenuSaida{
 
 	protected void iniciarMenuSaida(Usuario usuario){
 		JPanel painel = new JPanel();
+		
+		Registro registro = new Registro();
+		registro.login_name = usuario.login_name;
+		registro.insereRegistro(9001, "");
 		
 		/*FALTA
 		*/
@@ -94,12 +96,21 @@ public class MenuSaida{
 		
 		sair.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				registro.login_name = usuario.login_name;
+				registro.insereRegistro(9003, "");
+				
+				registro.login_name = usuario.login_name;
+        		registro.insereRegistro(1002, "");
+				
 				frame.dispose();
 			}
 		});
 		
 		voltar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				registro.login_name = usuario.login_name;
+				registro.insereRegistro(9004, "");
+				
 				frame.remove(painel);
 				frame.revalidate();
 				frame.repaint();

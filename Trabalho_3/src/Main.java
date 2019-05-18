@@ -1,6 +1,9 @@
+import java.util.Map;
+
 import autenticacao.identificacaoUsuario;
 import banco.conexaoBD;
 import banco.Registro;
+import banco.Mensagem;
 
 public class Main {
 	
@@ -9,7 +12,11 @@ public class Main {
 		/* iniciando conexao com o banco q sera usada durante todo o sistema */
 		conexaoBD.getInstance().getConnection();
 		
+		Map<Integer, String> mensagem;
+		mensagem = (new Mensagem()).criaMap();
+				
 		Registro registro = new Registro();
+		registro.getMensagem(mensagem);
 		registro.login_name = "";
 		registro.insereRegistro(1001, "");
 		

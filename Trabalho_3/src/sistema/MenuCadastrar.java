@@ -4,7 +4,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.nio.file.NoSuchFileException;
 import java.security.Principal;
 import java.security.cert.X509Certificate;
 import javax.swing.*;
@@ -171,7 +170,7 @@ public class MenuCadastrar{
 			public void actionPerformed(ActionEvent e) {
 				
 				registro.login_name = usuario.login_name;
-				registro.insereRegistro(6002, "");
+				registro.insereRegistro(6002, certificado.getText());
 
 				// verifica senha e confirmação
 				String senha = new String(pw.getPassword());
@@ -181,7 +180,7 @@ public class MenuCadastrar{
 					JOptionPane.showMessageDialog(frame, "As senhas devem ser iguais!");
 					
 					registro.login_name = usuario.login_name;
-					registro.insereRegistro(6003, "");
+					registro.insereRegistro(6003, certificado.getText());
 
 					return;
 				}
@@ -198,7 +197,7 @@ public class MenuCadastrar{
 					JOptionPane.showMessageDialog(frame, "Erro ao abrir arquivo pelo caminho! Tente novamente.");
 					
 					registro.login_name = usuario.login_name;
-					registro.insereRegistro(6004, "");
+					registro.insereRegistro(6004, certificado.getText());
 				}
 				
 				int grupo = (int) combo.getSelectedItem();
@@ -236,6 +235,9 @@ public class MenuCadastrar{
 
 				// caso positivo, insere dados no banco
 				if (resultadoConfirmacao == JOptionPane.OK_OPTION) {
+					
+					registro.login_name = usuario.login_name;
+					registro.insereRegistro(6005, certificado.getText());
 
 					if (Usuario.verificaUsuarioExistente(emailSujeito)){
 						JOptionPane.showMessageDialog(frame, "Este email de usuário já existe!");
@@ -256,6 +258,10 @@ public class MenuCadastrar{
 
 					}
 				}
+				else {
+					registro.login_name = usuario.login_name;
+					registro.insereRegistro(6006, certificado.getText());
+				}
 				
 			}
 		});
@@ -263,6 +269,9 @@ public class MenuCadastrar{
 		
 		voltar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				registro.login_name = usuario.login_name;
+				registro.insereRegistro(6007, "");
+				
 				frame.remove(painel);
 				frame.revalidate();
 				frame.repaint();

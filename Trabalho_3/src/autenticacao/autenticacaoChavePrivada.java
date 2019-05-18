@@ -44,6 +44,7 @@ public class autenticacaoChavePrivada {
 	private byte [] chavePrivadaCifrada;
 	private ActionListener cliqueBuscaChave = null;
 	private ActionListener cliqueDecriptaChave = null;
+	private Path path = null;
 
 	private autenticacaoChavePrivada() {
 		conn = conexaoBD.getInstance().getConnection();
@@ -105,11 +106,9 @@ public class autenticacaoChavePrivada {
 		botao.setBounds((10*larguraFrame - 2*larguraFrame)/20, input.getY()+250, 2*larguraFrame/10, 70);
 		painel.add(botao);
 
-
 		cliqueBuscaChave = new ActionListener() {
 
 			public void actionPerformed(ActionEvent event){
-				Path path = null;
 
 				// OBTEM CHAVE PRIVADA CIFRADA
 				try{
@@ -170,7 +169,7 @@ public class autenticacaoChavePrivada {
 							JOptionPane.showMessageDialog(frame, "Chave privada autenticada com sucesso! Acesso concedido!");
 							
 							registro.login_name = usuario.login_name;
-							registro.insereRegistro(4003, "");
+							registro.insereRegistro(4003, path.toString());
 							
 							tentativas = 0;
 
@@ -193,7 +192,7 @@ public class autenticacaoChavePrivada {
 							msg = "Chave privada inválida!";
 							
 							registro.login_name = usuario.login_name;
-							registro.insereRegistro(4006, "");
+							registro.insereRegistro(4006, path.toString());
 						}
 						
 					}
@@ -202,7 +201,7 @@ public class autenticacaoChavePrivada {
 						msg = "Frase secreta incorreta!";
 						
 						registro.login_name = usuario.login_name;
-						registro.insereRegistro(4005, "");
+						registro.insereRegistro(4005, path.toString());
 					}
 
 
@@ -211,7 +210,7 @@ public class autenticacaoChavePrivada {
 						JOptionPane.showMessageDialog(frame, msg+" Número de tentativas excedido! Usuário bloqueado por 2 minutos.");
 						
 						registro.login_name = usuario.login_name;
-						registro.insereRegistro(4007, "");
+						registro.insereRegistro(4007, path.toString());
 						
 						// Remove painel atual
 						frame.remove(painel);
@@ -367,7 +366,6 @@ public class autenticacaoChavePrivada {
 		}
 		catch(Exception e) {
 			System.err.println(e);
-			System.out.println("AQUI?????????????????????");
 			return null;
 		}
 		

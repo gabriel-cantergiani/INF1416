@@ -57,7 +57,7 @@ public class autenticacaoSenha {
 		/* Array que guarda a senha (em pares) */
 		List<int[]> senha = new ArrayList<>();
 		
-		JLabel labelLogin = new JLabel("Senha de 6 a 8 dígitos:", SwingConstants.CENTER);
+		JLabel labelLogin = new JLabel("Senha de 6 a 8 digitos:", SwingConstants.CENTER);
 		labelLogin.setFont(new Font("Verdana",1,larguraFrame/40));
 		labelLogin.setBounds(larguraFrame/2 - 165, alturaFrame/10, 330, 80);
 		labelLogin.setBounds((10*larguraFrame - 8*larguraFrame)/20, alturaFrame/10, 8*larguraFrame/10, 80);
@@ -71,7 +71,7 @@ public class autenticacaoSenha {
 			public void actionPerformed(ActionEvent e){
 
 				if (senha.size() >= 8){
-					JOptionPane.showMessageDialog(frame, "A senha deve conter no máximo 8 dígitos!");
+					JOptionPane.showMessageDialog(frame, "A senha deve conter no maximo 8 digitos!");
 					return;
 				}
 
@@ -89,7 +89,7 @@ public class autenticacaoSenha {
 			public void actionPerformed(ActionEvent e){
 
 				if (senha.size() < 6){
-					JOptionPane.showMessageDialog(frame, "A senha deve conter no mínimo 6 dígitos!");
+					JOptionPane.showMessageDialog(frame, "A senha deve conter no minimo 6 digitos!");
 					return;
 				}
 
@@ -130,7 +130,7 @@ public class autenticacaoSenha {
 						registro.insereRegistro(3006, "");
 						
 						usuario.bloqueiaUsuario();
-						JOptionPane.showMessageDialog(frame, "Número de tentativas excedido! Usuário bloqueado por 2 minutos.");
+						JOptionPane.showMessageDialog(frame, "Numero de tentativas excedido! Usuario bloqueado por 2 minutos.");
 						// Remove painel atual
 						frame.remove(painel);
 						frame.revalidate();
@@ -144,7 +144,7 @@ public class autenticacaoSenha {
 					}
 
 					senha.clear();
-					JOptionPane.showMessageDialog(frame, "Senha incorreta! Você tem mais "+(3-tentativas)+" tentativa(s).");
+					JOptionPane.showMessageDialog(frame, "Senha incorreta! Voce tem mais "+(3-tentativas)+" tentativa(s).");
 					atualizaBotoes(botoes);
 				}
 
