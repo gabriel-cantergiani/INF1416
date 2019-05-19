@@ -123,27 +123,20 @@ public class MenuConsultarArquivos{
 			public void actionPerformed(ActionEvent e) {
 				
 				registro.login_name = usuario.login_name;
-				registro.insereRegistro(8003, caminhoPasta.getText());
+				registro.insereRegistro(8003, "");
 								
 				// DECRIPTA INDEX
 				String arquivoIndex;
 				try {
-					arquivoIndex = new String (decriptaArquivo(caminhoPasta.getText()+"\\index", usuario), "UTF8" );
+					arquivoIndex = new String (decriptaArquivo(caminhoPasta.getText(), "index", usuario), "UTF8" );
 				}
 				catch (Exception ex) {
-					registro.login_name = usuario.login_name;
-					registro.insereRegistro(8004, caminhoPasta.getText());
-					
 					JOptionPane.showMessageDialog(frame, "Erro ao abrir e/ou decriptar pasta fornecida!");
 					return;
 				}				
 					
 				if (arquivoIndex == null)
 					return;
-				else {
-					registro.login_name = usuario.login_name;
-					registro.insereRegistro(8005, caminhoPasta.getText());
-				}
 				
 				painel.remove(caminho);
 				painel.remove(caminhoPasta);
@@ -166,8 +159,7 @@ public class MenuConsultarArquivos{
 					painel.add(arquivo);
 				}
 				
-				registro.login_name = usuario.login_name;
-				registro.insereRegistro(8009, caminhoPasta.getText());
+				registro.insereRegistro(8009, "");
 
 				painel.add(voltar);
 
@@ -196,9 +188,6 @@ public class MenuConsultarArquivos{
 
 			@Override
 			public void mouseClicked(MouseEvent event) {
-				
-				registro.login_name = usuario.login_name;
-				registro.insereRegistro(8010, caminhoPasta.getText());
 
 				JLabel label = (JLabel) event.getSource();
 				String [] linhaArquivo = label.getText().split(" "); 
@@ -208,6 +197,8 @@ public class MenuConsultarArquivos{
 				String donoArquivo = linhaArquivo[2];
 				int grupoArquivo;
 
+				registro.insereRegistro(8010, nomeCodigo);
+
 				if ( linhaArquivo[3].equals("usuario") )
 					grupoArquivo = 2;
 				else
@@ -216,19 +207,15 @@ public class MenuConsultarArquivos{
 				if ( !donoArquivo.equals(usuario.login_name) && (grupoArquivo != usuario.grupo)){
 					JOptionPane.showMessageDialog(frame, "Você não tem permissão para acessar este arquivo!");
 					
-					registro.login_name = usuario.login_name;
-					registro.insereRegistro(8008, caminhoPasta.getText());
-					
-					registro.login_name = usuario.login_name;
-					registro.insereRegistro(8012, caminhoPasta.getText());
+					registro.insereRegistro(8012, nomeCodigo);
 					
 					return;	
 				}
 				
 				registro.login_name = usuario.login_name;
-				registro.insereRegistro(8011, caminhoPasta.getText());
+				registro.insereRegistro(8011, nomeCodigo);
 
-				byte [] conteudoArquivo = decriptaArquivo(caminhoPasta.getText()+"\\"+nomeCodigo, usuario);
+				byte [] conteudoArquivo = decriptaArquivo(caminhoPasta.getText(), nomeCodigo, usuario);
 				
 				if(conteudoArquivo == null)	
 					return;
@@ -238,26 +225,12 @@ public class MenuConsultarArquivos{
 				    stream.write(conteudoArquivo);
 				}
 				catch(Exception e){
-					JOptionPane.showMessageDialog(frame, "Erro ao escrever conteudo do arquivo");
-					
-					registro.login_name = usuario.login_name;
-					registro.insereRegistro(8015, caminhoPasta.getText());
-					
-					registro.login_name = usuario.login_name;
-					registro.insereRegistro(8016, caminhoPasta.getText());
-					
+					JOptionPane.showMessageDialog(frame, "Erro ao escrever conteudo do arquivo");					
 					return;
 				}
 				
 
-				JOptionPane.showMessageDialog(frame, "Arquivo decriptado com sucesso!");
-				
-				registro.login_name = usuario.login_name;
-				registro.insereRegistro(8013, caminhoPasta.getText());
-				
-				registro.login_name = usuario.login_name;
-				registro.insereRegistro(8014, caminhoPasta.getText());
-				
+				JOptionPane.showMessageDialog(frame, "Arquivo decriptado com sucesso!");				
 				return;
 
 			}
@@ -271,14 +244,17 @@ public class MenuConsultarArquivos{
 
 
 
-	private byte [] decriptaArquivo(String caminho,Usuario usuario){
+	private byte [] decriptaArquivo(String caminhoPasta, String nomeArquivo, Usuario usuario){
 		
 		Registro registro = new Registro();
+		registro.login_name = usuario.login_name;
 
 		byte [] envelope = null;
 		byte [] arquivoCifrado = null;
 		byte [] assinatura = null;
 		byte[] arquivoBytes = null;
+
+		String caminho = caminhoPasta+"\\"+nomeArquivo;
 
 		// Abre arquivos de indice
 		try{
@@ -291,6 +267,9 @@ public class MenuConsultarArquivos{
 		}
 		catch(IOException IOe){
 			System.err.println(IOe);
+
+			registro.insereRegistro(8004, nomeArquivo);
+
 			JOptionPane.showMessageDialog(frame, "Erro ao abrir pasta fornecida!");
 			return null;
 		}
@@ -304,9 +283,12 @@ public class MenuConsultarArquivos{
 			semente = cipher.doFinal(envelope);
 		} catch (Exception e1) {
 			e1.printStackTrace();
-			
-			registro.login_name = usuario.login_name;
-			registro.insereRegistro(8007, caminho);
+
+
+			if (nomeArquivo.equals("index"))
+				registro.insereRegistro(8007, nomeArquivo);
+			else
+				registro.insereRegistro(8015, nomeArquivo);
 			
 			JOptionPane.showMessageDialog(frame, "A chave privada fornecida não é válida para decriptar este arquivo.");
 			return null;
@@ -326,8 +308,10 @@ public class MenuConsultarArquivos{
 		} catch (Exception e1) {
 			e1.printStackTrace();
 			
-			registro.login_name = usuario.login_name;
-			registro.insereRegistro(8007, caminho);
+			if (nomeArquivo.equals("index"))
+				registro.insereRegistro(8007, nomeArquivo);
+			else
+				registro.insereRegistro(8015, nomeArquivo);
 			
 			JOptionPane.showMessageDialog(frame, "Envelope digital inválido.");
 			return null;
@@ -342,12 +326,19 @@ public class MenuConsultarArquivos{
 		} catch (Exception e1) {
 			e1.printStackTrace();
 			
-			registro.login_name = usuario.login_name;
-			registro.insereRegistro(8007, caminho);
+			if (nomeArquivo.equals("index"))
+				registro.insereRegistro(8007, nomeArquivo);
+			else
+				registro.insereRegistro(8015, nomeArquivo);
 			
 			JOptionPane.showMessageDialog(frame, "Envelope digital inválido. Não foi possível decriptar o arquivo.");
 			return null;
 		}
+
+		if (nomeArquivo.equals("index"))
+			registro.insereRegistro(8005, nomeArquivo);
+		else
+			registro.insereRegistro(8013, nomeArquivo);
 
 		// decriptar assinatura com chave publica do user01 que ta no certificado e obter digest original
 		
@@ -359,25 +350,33 @@ public class MenuConsultarArquivos{
 			if (! sig.verify(assinatura)) {
 				JOptionPane.showMessageDialog(frame, "Teste de integridade e autenticidade falhou! Você não têm permissão para acessar esta pasta de arquivos!");
 				
-				registro.login_name = usuario.login_name;
-				registro.insereRegistro(8008, caminho);
+				if (nomeArquivo.equals("index"))
+					registro.insereRegistro(8008, nomeArquivo);
+				else
+					registro.insereRegistro(8016, nomeArquivo);
 				
 				return null;
 			}
-			
-			registro.login_name = usuario.login_name;
-			registro.insereRegistro(8006, caminho);
 			
 			System.out.println("Assinatura verificada! Arquivo decriptado corretamente!");
 
 		} catch (Exception e1) {
 			e1.printStackTrace();
 			
-			registro.login_name = usuario.login_name;
-			registro.insereRegistro(8007, caminho);
+			if (nomeArquivo.equals("index"))
+				registro.insereRegistro(8008, nomeArquivo);
+			else
+				registro.insereRegistro(8016, nomeArquivo);
 			
 			JOptionPane.showMessageDialog(frame, "Assinatura digital inválida.");
 			return null;
+		}
+
+		if (nomeArquivo.equals("index")){
+			registro.insereRegistro(8006, nomeArquivo);
+		}
+		else{
+			registro.insereRegistro(8014, nomeArquivo);
 		}
 
 		return arquivoBytes;
