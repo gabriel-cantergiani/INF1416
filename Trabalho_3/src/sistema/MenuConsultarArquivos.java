@@ -76,7 +76,7 @@ public class MenuConsultarArquivos{
 		if(usuario.grupo == 1)
 			grupo.setText("Grupo: "+usuario.grupo);
 		else
-			grupo.setText("Grupo: Usu·rio");
+			grupo.setText("Grupo: Usu√°rio");
 		grupo.setFont(new Font("Verdana",1,30));
 		grupo.setPreferredSize(new Dimension(850,50));
 		painel.add(grupo);
@@ -88,13 +88,13 @@ public class MenuConsultarArquivos{
 		painel.add(nome);
 		
 		JLabel numAcessos = new JLabel();
-		numAcessos.setText("Total de consultas do usu·rio: "+usuario.numero_consultas);
+		numAcessos.setText("Total de consultas do usu√°rio: "+usuario.numero_consultas);
 		numAcessos.setFont(new Font("Verdana",1,30));
 		numAcessos.setPreferredSize(new Dimension(850,50));
 		painel.add(numAcessos);
 		
 		JLabel caminho = new JLabel();
-		caminho.setText("ñ Caminho da pasta: <max 255 caracteres>");
+		caminho.setText("‚Äì Caminho da pasta: <max 255 caracteres>");
 		caminho.setFont(new Font("Verdana",1,20));
 		caminho.setPreferredSize(new Dimension(850,50));
 		painel.add(caminho);
@@ -162,7 +162,7 @@ public class MenuConsultarArquivos{
 				painel.add(voltar);
 
 				usuario.incrementaConsultasUsuario();
-				numAcessos.setText("Total de consultas do usu·rio: "+usuario.numero_consultas);
+				numAcessos.setText("Total de consultas do usu√°rio: "+usuario.numero_consultas);
 				
 				frame.revalidate();
 				frame.repaint();
@@ -203,7 +203,7 @@ public class MenuConsultarArquivos{
 					grupoArquivo = 1;
 
 				if ( !donoArquivo.equals(usuario.login_name) && (grupoArquivo != usuario.grupo)){
-					JOptionPane.showMessageDialog(frame, "VocÍ n„o tem permiss„o para acessar este arquivo!");
+					JOptionPane.showMessageDialog(frame, "Voc√™ n√£o tem permiss√£o para acessar este arquivo!");
 					
 					registro.insereRegistro(8012, nomeCodigo);
 					
@@ -288,7 +288,7 @@ public class MenuConsultarArquivos{
 			else
 				registro.insereRegistro(8015, nomeArquivo);
 			
-			JOptionPane.showMessageDialog(frame, "A chave privada fornecida n„o È v·lida para decriptar este arquivo.");
+			JOptionPane.showMessageDialog(frame, "A chave privada fornecida n√£o √© v√°lida para decriptar este arquivo.");
 			return null;
 		}
 		
@@ -311,7 +311,7 @@ public class MenuConsultarArquivos{
 			else
 				registro.insereRegistro(8015, nomeArquivo);
 			
-			JOptionPane.showMessageDialog(frame, "Envelope digital inv·lido.");
+			JOptionPane.showMessageDialog(frame, "Envelope digital inv√°lido.");
 			return null;
 		}
 
@@ -329,7 +329,7 @@ public class MenuConsultarArquivos{
 			else
 				registro.insereRegistro(8015, nomeArquivo);
 			
-			JOptionPane.showMessageDialog(frame, "Envelope digital inv·lido. N„o foi possÌvel decriptar o arquivo.");
+			JOptionPane.showMessageDialog(frame, "Envelope digital inv√°lido. N√£o foi poss√≠vel decriptar o arquivo.");
 			return null;
 		}
 
@@ -346,7 +346,7 @@ public class MenuConsultarArquivos{
 			sig.update(arquivoBytes);
 			
 			if (! sig.verify(assinatura)) {
-				JOptionPane.showMessageDialog(frame, "Teste de integridade e autenticidade falhou! VocÍ n„o tÍm permiss„o para acessar esta pasta de arquivos!");
+				JOptionPane.showMessageDialog(frame, "Teste de integridade e autenticidade falhou!");
 				
 				if (nomeArquivo.equals("index"))
 					registro.insereRegistro(8008, nomeArquivo);
@@ -366,7 +366,7 @@ public class MenuConsultarArquivos{
 			else
 				registro.insereRegistro(8016, nomeArquivo);
 			
-			JOptionPane.showMessageDialog(frame, "Assinatura digital inv·lida.");
+			JOptionPane.showMessageDialog(frame, "Assinatura digital inv√°lida.");
 			return null;
 		}
 
