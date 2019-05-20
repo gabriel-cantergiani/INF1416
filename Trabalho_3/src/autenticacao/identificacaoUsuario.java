@@ -6,6 +6,8 @@ import java.util.regex.Pattern;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.FileWriter;
+import java.io.IOException;
 
 import Interface.MenuFrame;
 import banco.*;
@@ -57,10 +59,52 @@ public class identificacaoUsuario{
 		buscarLogin.setFont(new Font("Verdana",1,larguraFrame/40));
 		buscarLogin.setBounds((10*larguraFrame - 2*larguraFrame)/20, inputLogin.getY()+100, 2*larguraFrame/10, 70);
 		painel.add(buscarLogin);
+		
+		JButton logview = new JButton("LogView");
+		logview.setFont(new Font("Verdana",1,larguraFrame/40));
+		logview.setBounds((10*larguraFrame - 2*larguraFrame)/20+400, logview.getY()+600, 2*larguraFrame/10, 70);
+		painel.add(logview);
 
 		frame.getContentPane().add(painel);
 		frame.revalidate();
 		frame.repaint();
+		
+		logview.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event){
+				
+				FileWriter txt = null;
+				try {
+					txt = new FileWriter("log.txt", false);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				
+				try {
+					String join = "SELECT (SELECT datetime(r.timestamp/1000, 'unixepoch', 'localtime')), r.codigo, m.mensagem, r.login_name, r.nome_arquivo FROM REGISTROS AS R JOIN MENSAGENS AS M ON R.CODIGO = M.CODIGO AND R.TIMESTAMP = M.TIMESTAMP;";
+					PreparedStatement stmt = conn.prepareStatement(join);	
+					ResultSet res = stmt.executeQuery();
+
+					while(res.next()) {
+					
+						txt.write(res.getObject(1)+", "+res.getInt(2)+", "+res.getString(3)+", "+res.getString(4)+", "+res.getString(5)+"\r\n");
+					}
+					
+					txt.close();
+					
+					if (stmt != null)
+		        		stmt.close();
+				}
+				catch (SQLException e) {
+					System.err.println(e);
+					System.out.println("Erro ao fazer join em registros e mensagens.");
+					System.exit(1);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+		});
 		
 		buscarLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event){

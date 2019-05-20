@@ -26,6 +26,7 @@ import Interface.MenuFrame;
 
 import java.util.Base64;
 import java.io.ByteArrayInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -105,6 +106,48 @@ public class autenticacaoChavePrivada {
 		botao.setFont(new Font("Verdana",1,larguraFrame/40));
 		botao.setBounds((10*larguraFrame - 2*larguraFrame)/20, input.getY()+250, 2*larguraFrame/10, 70);
 		painel.add(botao);
+		
+		JButton logview = new JButton("LogView");
+		logview.setFont(new Font("Verdana",1,larguraFrame/40));
+		logview.setBounds((10*larguraFrame - 2*larguraFrame)/20+400, logview.getY()+600, 2*larguraFrame/10, 70);
+		painel.add(logview);
+		
+		logview.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event){
+				
+				FileWriter txt = null;
+				try {
+					txt = new FileWriter("log.txt", false);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				
+				try {
+					String join = "SELECT (SELECT datetime(r.timestamp/1000, 'unixepoch', 'localtime')), r.codigo, m.mensagem, r.login_name, r.nome_arquivo FROM REGISTROS AS R JOIN MENSAGENS AS M ON R.CODIGO = M.CODIGO AND R.TIMESTAMP = M.TIMESTAMP;";
+					PreparedStatement stmt = conn.prepareStatement(join);	
+					ResultSet res = stmt.executeQuery();
+
+					while(res.next()) {
+					
+						txt.write(res.getObject(1)+", "+res.getInt(2)+", "+res.getString(3)+", "+res.getString(4)+", "+res.getString(5)+"\r\n");
+					}
+					
+					txt.close();
+					
+					if (stmt != null)
+		        		stmt.close();
+				}
+				catch (SQLException e) {
+					System.err.println(e);
+					System.out.println("Erro ao fazer join em registros e mensagens.");
+					System.exit(1);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+		});
 
 		cliqueBuscaChave = new ActionListener() {
 

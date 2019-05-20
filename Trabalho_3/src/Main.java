@@ -1,3 +1,4 @@
+import java.io.File;
 import java.util.Map;
 
 import autenticacao.identificacaoUsuario;
@@ -6,6 +7,7 @@ import banco.Registro;
 import banco.Mensagem;
 
 public class Main {
+	public static File arq;
 	
 	public static void main(String args[]){
 		
@@ -14,6 +16,8 @@ public class Main {
 		
 		Map<Integer, String> mensagem;
 		mensagem = (new Mensagem()).criaMap();
+		
+		arq = new File("log.txt");
 				
 		Registro registro = new Registro();
 		registro.getMensagem(mensagem);
