@@ -129,7 +129,7 @@ public class autenticacaoChavePrivada {
 				}
 
 				JOptionPane.showMessageDialog(frame, "Arquivo aberto com sucesso!");
-				label.setText("Digita a frase secreta de decriptação:");
+				label.setText("Digita a frase secreta de decriptaÃ§Ã£o:");
 				input.setText("");
 				input.setBounds((10*larguraFrame - 6*larguraFrame)/20, label.getY()+100, 6*larguraFrame/10, 60);
 				botao.setText("Decriptar");
@@ -190,7 +190,7 @@ public class autenticacaoChavePrivada {
 						}
 						else {
 							tentativas += 1;
-							msg = "Chave privada inválida!";
+							msg = "Chave privada invÃ¡lida!";
 							
 							registro.login_name = usuario.login_name;
 							registro.insereRegistro(4006, path.toString());
@@ -208,7 +208,7 @@ public class autenticacaoChavePrivada {
 
 					if (tentativas == 3){
 						usuario.bloqueiaUsuario();
-						JOptionPane.showMessageDialog(frame, msg+" Número de tentativas excedido! Usuário bloqueado por 2 minutos.");
+						JOptionPane.showMessageDialog(frame, msg+" NÃºmero de tentativas excedido! UsuÃ¡rio bloqueado por 2 minutos.");
 						
 						registro.login_name = usuario.login_name;
 						registro.insereRegistro(4007, path.toString());
@@ -217,6 +217,8 @@ public class autenticacaoChavePrivada {
 						frame.remove(painel);
 						frame.revalidate();
 						frame.repaint();
+						
+						registro.insereRegistro(4002, "");
 						identificacaoUsuario.getInstance().iniciarIdentificacao();
 						return;
 					}
@@ -228,7 +230,7 @@ public class autenticacaoChavePrivada {
 					botao.setBounds((10*larguraFrame - 2*larguraFrame)/20, input.getY()+250, 2*larguraFrame/10, 70);
 					botao.removeActionListener(this);
 					botao.addActionListener(cliqueBuscaChave);
-					JOptionPane.showMessageDialog(frame, msg+" Você tem mais "+(3-tentativas)+" tentativa(s).");
+					JOptionPane.showMessageDialog(frame, msg+" VocÃª tem mais "+(3-tentativas)+" tentativa(s).");
 			}
 
 		};
