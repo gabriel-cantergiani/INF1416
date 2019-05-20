@@ -4,9 +4,14 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.security.Principal;
 import java.security.cert.X509Certificate;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -39,6 +44,8 @@ public class MenuAlterarUsuario{
 
 	protected void iniciarMenuAlterarUsuario(Usuario usuario){
 		JPanel painel = new JPanel();
+		
+		int larguraFrame = frame.getWidth();
 
 		/*FALTA
 		 	- botao alterar
@@ -258,6 +265,7 @@ public class MenuAlterarUsuario{
 				MenuPrincipal.getInstance().iniciarMenuPrincipal(usuario);
 			}
 		});
+		
 		
 		frame.getContentPane().add(painel);
 		frame.revalidate();

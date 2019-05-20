@@ -41,6 +41,7 @@ public class identificacaoUsuario{
 		JPanel painel = new JPanel();
 		painel.setLayout(null);
 		int larguraFrame = frame.getWidth();
+		int alturaFrame = frame.getHeight();
 		
 		JLabel labelLogin = new JLabel("Digite o login_name do usuario:", SwingConstants.CENTER);
 		labelLogin.setFont(new Font("Verdana",1,larguraFrame/40));
@@ -62,7 +63,7 @@ public class identificacaoUsuario{
 		
 		JButton logview = new JButton("LogView");
 		logview.setFont(new Font("Verdana",1,larguraFrame/40));
-		logview.setBounds((10*larguraFrame - 2*larguraFrame)/20+400, logview.getY()+600, 2*larguraFrame/10, 70);
+		logview.setBounds(75*larguraFrame/100, 8*alturaFrame/10, 2*larguraFrame/10, 70);
 		painel.add(logview);
 
 		frame.getContentPane().add(painel);
@@ -75,11 +76,7 @@ public class identificacaoUsuario{
 				FileWriter txt = null;
 				try {
 					txt = new FileWriter("log.txt", false);
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
-				
-				try {
+					
 					String join = "SELECT (SELECT datetime(r.timestamp/1000, 'unixepoch', 'localtime')), r.codigo, m.mensagem, r.login_name, r.nome_arquivo FROM REGISTROS AS R JOIN MENSAGENS AS M ON R.CODIGO = M.CODIGO AND R.TIMESTAMP = M.TIMESTAMP;";
 					PreparedStatement stmt = conn.prepareStatement(join);	
 					ResultSet res = stmt.executeQuery();
@@ -93,16 +90,14 @@ public class identificacaoUsuario{
 					
 					if (stmt != null)
 		        		stmt.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
 				}
 				catch (SQLException e) {
 					System.err.println(e);
 					System.out.println("Erro ao fazer join em registros e mensagens.");
 					System.exit(1);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
-				
 			}
 		});
 		

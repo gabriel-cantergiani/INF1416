@@ -4,7 +4,12 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -117,6 +122,7 @@ public class MenuSaida{
 				MenuPrincipal.getInstance().iniciarMenuPrincipal(usuario);
 			}
 		});
+
 
 		frame.getContentPane().add(painel);
 		frame.revalidate();

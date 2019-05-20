@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,6 +16,9 @@ import java.security.Key;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -52,6 +56,7 @@ public class MenuConsultarArquivos{
 		Registro registro = new Registro();
 		registro.login_name = usuario.login_name;
 		registro.insereRegistro(8001, "");
+	
 
 		/*FALTA
 			- numero de linhas dos arquivos
