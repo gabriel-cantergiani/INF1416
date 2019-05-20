@@ -143,6 +143,7 @@ public class autenticacaoSenha {
 						registro.login_name = usuario.login_name;
 						registro.insereRegistro(3007, "");
 						
+						registro.insereRegistro(3002, "");
 						identificacaoUsuario.getInstance().iniciarIdentificacao();
 						return;
 					}
